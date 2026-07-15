@@ -1,0 +1,14 @@
+{
+  "required": true,
+  "package": "com.atom.grabvillager.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "MixinMinecraft"
+  ],
+  "client": [
+    "MixinTitleScreen"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
