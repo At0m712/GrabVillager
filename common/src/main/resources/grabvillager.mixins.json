@@ -1,12 +1,14 @@
 {
   "required": true,
+  "minVersion": "0.8",
   "package": "com.atom.grabvillager.mixin",
   "compatibilityLevel": "JAVA_21",
-  "mixins": [
-    "MixinMinecraft"
-  ],
   "client": [
-    "MixinTitleScreen"
+    "HideCarriedVillagerMixin",
+    "PlayerPassengerMixin",
+    "PlayerModelMixin",
+    "VillagerRotationMixin",
+    "HideHandMixin"
   ],
   "injectors": {
     "defaultRequire": 1

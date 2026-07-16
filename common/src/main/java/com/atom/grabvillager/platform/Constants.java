@@ -1,4 +1,4 @@
-package com.atom.grabvillager;
+package com.atom.grabvillager.platform;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -1,22 +1,22 @@
 {
     "schemaVersion": 1,
     "id": "grabvillager",
-    "version": "${version}",
+    "version": "1.0.0",
     "name": "Grab Villager",
-    "description": "Un mod pour transporter les villageois !",
+    "description": "Attrape et lance des villageois librement !",
     "authors": [
-        "atom"
+        "Atom"
     ],
-    "contact": {
-        "homepage": "https://fabricmc.net/",
-        "sources": "https://github.com/FabricMC/fabric-example-mod"
-    },
+    "contact": {},
     "license": "MIT",
     "icon": "assets/grabvillager/icon.png",
     "environment": "*",
     "entrypoints": {
         "main": [
-            "com.atom.grabvillager.GrabVillagerFabric"
+            "com.atom.grabvillager.fabric.GrabVillagerFabric"
+        ],
+        "client": [
+            "com.atom.grabvillager.fabric.client.GrabVillagerClientFabric"
         ]
     },
     "mixins": [
@@ -27,8 +27,5 @@
         "minecraft": "~1.21",
         "java": ">=21",
         "fabric-api": "*"
-    },
-    "suggests": {
-        "another-mod": "*"
     }
 }

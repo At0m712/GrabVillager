@@ -1,6 +1,6 @@
 package com.atom.grabvillager.mixin;
 
-import com.atom.grabvillager.Constants;
+import com.atom.grabvillager.platform.Constants;
 import net.minecraft.client.Minecraft;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
