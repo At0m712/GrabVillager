@@ -15,12 +15,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(ItemInHandRenderer.class)
 public class HideHandMixin {
 
-    // On s'injecte au début de la méthode qui dessine le bras et l'outil tenu
     @Inject(method = "renderArmWithItem", at = @At("HEAD"), cancellable = true)
     private void grabvillager$hideHandWhenCarrying(AbstractClientPlayer player, float partialTicks, float pitch, InteractionHand hand, float swingProgress, ItemStack stack, float equipProgress, PoseStack poseStack, MultiBufferSource buffer, int combinedLight, CallbackInfo ci) {
-        // Si le joueur porte un villageois, on annule le rendu graphique de sa main et de son item
         if (player != null && GrabVillagerLogic.isCarryingVillager(player)) {
-            ci.cancel();
+
+            // Si les outils sont bloqués dans la config OU qu'on commence à charger le lancer
+            if (!com.atom.grabvillager.config.GrabVillagerConfig.allowTools || com.atom.grabvillager.client.GrabVillagerClientLogic.getTicksHeld() > 0) {
+                ci.cancel();
+            }
         }
     }
 }

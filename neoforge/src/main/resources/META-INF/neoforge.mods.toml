@@ -1,28 +1,28 @@
 modLoader="javafml"
-loaderVersion="[21,)"
+loaderVersion="[2.1,)"
 license="MIT"
-issueTrackerURL=""
-
-[[mixins]]
-config="grabvillager.mixins.json"
+issueTrackerURL="https://github.com/TonNom/Grab_Villager/issues"
+displayURL="https://modrinth.com/mod/ton-mod"
 
 [[mods]]
-modId="grabvillager"
-version="1.0.0"
+modId="grab_villager"
+version="${version}"
 displayName="Grab Villager"
-authors="Atom"
-description="Attrape et lance des villageois librement !"
+description="Un mod pour porter les villageois !"
+authors="Toi"
 
-[[dependencies.grabvillager]]
+# Dépendance à NeoForge
+[[dependencies.grab_villager]]
 modId="neoforge"
 type="required"
-versionRange="[21,)"
+versionRange="[21.0,)"
 ordering="NONE"
 side="BOTH"
 
-[[dependencies.grabvillager]]
+# Dépendance à MINECRAFT (Plages 1.21.x ET 26.x)
+[[dependencies.grab_villager]]
 modId="minecraft"
 type="required"
-versionRange="[1.21,1.22)"
+versionRange="[1.21,1.22),[26,27)"
 ordering="NONE"
 side="BOTH"

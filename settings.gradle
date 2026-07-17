@@ -10,7 +10,8 @@ pluginManagement {
                 }
             }
             filter {
-                includeGroup('net.fabricmc')
+                // LA CORRECTION EST ICI : On autorise la lecture des sous-groupes Fabric
+                includeGroupAndSubgroups('net.fabricmc')
                 includeGroup('fabric-loom')
             }
         }

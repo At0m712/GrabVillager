@@ -8,7 +8,8 @@
     "PlayerPassengerMixin",
     "PlayerModelMixin",
     "VillagerRotationMixin",
-    "HideHandMixin"
+    "HideHandMixin",
+    "GhostVillagerMixin"
   ],
   "injectors": {
     "defaultRequire": 1

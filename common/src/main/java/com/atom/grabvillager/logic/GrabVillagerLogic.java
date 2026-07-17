@@ -10,9 +10,17 @@ import net.minecraft.world.phys.Vec3;
 
 public class GrabVillagerLogic {
 
-    // Nouvelle méthode pour vérifier si un joueur porte un villageois
     public static boolean isCarryingVillager(Player player) {
         return !player.getPassengers().isEmpty() && player.getFirstPassenger() instanceof Villager;
+    }
+
+    public static boolean shouldBlockActions(Player player) {
+        return isCarryingVillager(player) && !com.atom.grabvillager.config.GrabVillagerConfig.allowTools;
+    }
+
+    // NOUVEAU : Vérifie si on est en train d'essayer de taper NOTRE villageois
+    public static boolean isOwnPassenger(Player player, Entity target) {
+        return player.hasPassenger(target);
     }
 
     public static InteractionResult tryGrab(Player player, Entity target, InteractionHand hand) {

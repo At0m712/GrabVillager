@@ -1,15 +1,15 @@
 {
     "schemaVersion": 1,
-    "id": "grabvillager",
-    "version": "1.0.0",
+    "id": "grab_villager",
+    "version": "${version}",
     "name": "Grab Villager",
-    "description": "Attrape et lance des villageois librement !",
+    "description": "Un mod pour porter les villageois !",
     "authors": [
-        "Atom"
+        "At0m"
     ],
     "contact": {},
     "license": "MIT",
-    "icon": "assets/grabvillager/icon.png",
+    "icon": "assets/grab_villager/icon.png",
     "environment": "*",
     "entrypoints": {
         "main": [
@@ -20,12 +20,17 @@
         ]
     },
     "mixins": [
-        "grabvillager.mixins.json"
+        {
+            "config": "grabvillager.mixins.json"
+        }
     ],
     "depends": {
-        "fabricloader": ">=0.15.11",
-        "minecraft": "~1.21",
-        "java": ">=21",
-        "fabric-api": "*"
+        "fabricloader": ">=0.18.2",
+        "fabric-api": "*",
+        "minecraft": [
+            ">=1.21 <1.22",
+            ">=26 <27"
+        ],
+        "java": ">=21"
     }
 }
