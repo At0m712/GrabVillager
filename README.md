@@ -1,32 +1,48 @@
-# MultiLoader Template
+# Grab Villager
 
-This project provides a Gradle project template that can compile Minecraft mods for multiple modloaders using a common project for the sources. This project does not require any third party libraries or dependencies. If you have any questions or want to discuss the project, please join our [Discord](https://discord.myceliummod.network).
+Grab Villager is a highly practical and immersive Minecraft mod that solves one of the game's oldest frustrations: moving villagers. No more struggling with boats or minecarts! With this mod, you can simply pick up villagers, carry them on your back, and drop or throw them wherever you need.
 
-## Getting Started
+## ✨ Features
 
-### IntelliJ IDEA
-This guide will show how to import the MultiLoader Template into IntelliJ IDEA. The setup process is roughly equivalent to setting up the modloaders independently and should be very familiar to anyone who has worked with their MDKs.
+* **Easy Transport:** Pick up any villager seamlessly by sneaking and interacting with them.
+* **Immersive Carrying:** The villager visually rides on your back while you navigate the world.
+* **Drop or Throw Mechanic:** Press the dedicated keybind to drop the villager gently at your feet, or hold the keybind to charge up and throw the villager across the room!
+* **Smart Configuration:** Customize your experience, including whether players can still use tools and weapons while carrying a heavy villager.
+* **Multi-Loader Support:** Built for modern Minecraft, available for both **Fabric** and **NeoForge**.
 
-1. Clone or download this repository to your computer.
-2. Configure the project by setting the properties in the `gradle.properties` file. You will also need to change the `rootProject.name`  property in `settings.gradle`, this should match the folder name of your project, or else IDEA may complain.
-3. Open the template's root folder as a new project in IDEA. This is the folder that contains this README.md file and the gradlew executable.
-4. If your default JVM/JDK is not Java 21 you will encounter an error when opening the project. This error is fixed by going to `File > Settings > Build, Execution, Deployment > Build Tools > Gradle > Gradle JVM` and changing the value to a valid Java 21 JVM. You will also need to set the Project SDK to Java 21. This can be done by going to `File > Project Structure > Project SDK`. Once both have been set open the Gradle tab in IDEA and click the refresh button to reload the project.
-5. Open your Run/Debug Configurations. Under the `Application` category there should now be options to run Fabric and NeoForge projects. Select one of the client options and try to run it.
-6. Assuming you were able to run the game in step 5 your workspace should now be set up.
+## 🎮 How to Use
 
-### Eclipse
-While it is possible to use this template in Eclipse it is not recommended. During the development of this template multiple critical bugs and quirks related to Eclipse were found at nearly every level of the required build tools. While we continue to work with these tools to report and resolve issues support for projects like these are not there yet. For now Eclipse is considered unsupported by this project. The development cycle for build tools is notoriously slow so there are no ETAs available.
+### 1. Grabbing a Villager
+* Approach any villager.
+* Make sure your main hand is empty (or allowed by your config).
+* **Sneak** (default `Shift`) and **Right-Click** (Interact) on the villager.
+* The villager is now securely on your back!
 
-## Development Guide
-When using this template the majority of your mod should be developed in the `common` project. The `common` project is compiled against the vanilla game and is used to hold code that is shared between the different loader-specific versions of your mod. The `common` project has no knowledge or access to ModLoader specific code, apis, or concepts. Code that requires something from a specific loader must be done through the project that is specific to that loader, such as the `fabric` or `neoforge` projects.
+### 2. Dropping and Throwing
+The mod introduces a custom keybind for handling the villager you are carrying. Check your Minecraft Controls menu to see or rebind the `Drop/Throw Villager` key.
+* **To Drop:** Tap the keybind once. The villager will safely dismount at your current location.
+* **To Throw:** Hold down the keybind to build up throw power (charge). Release the key to launch the villager in the direction you are looking. The longer you hold, the further they fly!
 
-Loader specific projects such as the `fabric` and `neoforge` project are used to load the `common` project into the game. These projects also define code that is specific to that loader. Loader specific projects can access all the code in the `common` project. It is important to remember that the `common` project can not access code from loader specific projects.
+## ⚙️ Configuration
 
-## Removing Platforms and Loaders
-While this template has support for many modloaders, new loaders may appear in the future, and existing loaders may become less relevant.
+You can tweak the mod's behavior to fit your playstyle. Access the configuration menu via the in-game Mod Menu or by typing the command:
+`/grabvillager`
 
-Removing loader specific projects is as easy as deleting the folder, and removing the `include("projectname")` line from the `settings.gradle` file.
-For example if you wanted to remove support for `forge` you would follow the following steps:
 
-1. Delete the subproject folder. For example, delete `MultiLoader-Template/forge`.
-2. Remove the project from `settings.gradle`. For example, remove `include("forge")`. 
+## 📥 Installation
+
+1. Ensure you have the correct mod loader installed for your instance: [Fabric Loader](https://fabricmc.net/) or [NeoForge](https://neoforged.net/).
+2. Download the appropriate version of **Grab Villager** for your Minecraft version.
+3. *(Fabric Users Only)* Ensure you have the [Fabric API](https://modrinth.com/mod/fabric-api) installed in your mods folder.
+4. Drop the Grab Villager `.jar` file into your Minecraft `mods` folder.
+5. Launch the game and start hauling!
+
+## 🛠️ Technical Details & Compatibility
+
+This mod has been carefully optimized to handle server-client synchronization smoothly, ensuring that dropping and throwing villagers feels responsive without rubberbanding issues. It is compatible with most other mods, provided they do not aggressively alter the native Minecraft passenger mechanics.
+
+## Bug Reports & Feedback
+
+If you encounter any issues, strange behavior, or if you have suggestions for future updates, please feel free to open an issue on the GitHub repository.
+
+---
