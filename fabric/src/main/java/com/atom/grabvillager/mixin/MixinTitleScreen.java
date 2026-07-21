@@ -12,7 +12,6 @@ public class MixinTitleScreen {
 
     @Inject(at = @At("HEAD"), method = "init()V")
     private void init(CallbackInfo info) {
-        Constants.LOG.info("Mixin Fabric chargé avec succès !");
-        Constants.LOG.info("MC Version: {}", net.minecraft.SharedConstants.getCurrentVersion().getName());
+        Constants.LOG.info("Chargement du mod Grab Villager réussi !");
     }
 }

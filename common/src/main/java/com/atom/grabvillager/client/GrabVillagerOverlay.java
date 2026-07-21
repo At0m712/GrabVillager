@@ -48,27 +48,38 @@ public class GrabVillagerOverlay {
                 default: topColor = charge >= 1.0f ? 0xFF80FF20 : 0xFFDDDD22; bottomColor = charge >= 1.0f ? 0xFF408010 : 0xFFAA8811; break;
             }
 
-            guiGraphics.pose().pushPose();
-            guiGraphics.pose().translate(x + (baseW / 2.0f), y + (baseH / 2.0f), 0);
-            guiGraphics.pose().scale(GrabVillagerConfig.barSize, GrabVillagerConfig.barSize, 1.0f);
-            guiGraphics.pose().translate(-(baseW / 2.0f), -(baseH / 2.0f), 0);
+            // SOLUTION 1.21.6 : Mathématiques pures au lieu des matrices !
+            // On calcule les dimensions finales avec l'échelle (barSize).
+            float scale = GrabVillagerConfig.barSize;
+            int scaledW = Math.round(baseW * scale);
+            int scaledH = Math.round(baseH * scale);
 
-            guiGraphics.fill(-1, -1, baseW + 1, baseH + 1, 0xFF000000);
-            guiGraphics.fill(0, 0, baseW, baseH, 0xFF222222);
+            // On calcule le point de dessin pour rester centré malgré le redimensionnement
+            int drawX = Math.round(x + (baseW / 2.0f) - (scaledW / 2.0f));
+            int drawY = Math.round(y + (baseH / 2.0f) - (scaledH / 2.0f));
 
+            // Contour noir de la jauge
+            guiGraphics.fill(drawX - 1, drawY - 1, drawX + scaledW + 1, drawY + scaledH + 1, 0xFF000000);
+
+            // Fond gris de la jauge vide
+            guiGraphics.fill(drawX, drawY, drawX + scaledW, drawY + scaledH, 0xFF222222);
+
+            // Remplissage progressif
             if (charge > 0) {
                 if (isVert) {
-                    int fillH = (int) (baseH * charge);
-                    guiGraphics.fill(0, baseH - fillH, baseW - 2, baseH, topColor);
-                    guiGraphics.fill(baseW - 2, baseH - fillH, baseW, baseH, bottomColor);
+                    int fillH = Math.round(scaledH * charge);
+                    int splitW = Math.round((baseW - 2) * scale);
+
+                    guiGraphics.fill(drawX, drawY + scaledH - fillH, drawX + splitW, drawY + scaledH, topColor);
+                    guiGraphics.fill(drawX + splitW, drawY + scaledH - fillH, drawX + scaledW, drawY + scaledH, bottomColor);
                 } else {
-                    int fillW = (int) (baseW * charge);
-                    guiGraphics.fill(0, 0, fillW, baseH - 2, topColor);
-                    guiGraphics.fill(0, baseH - 2, fillW, baseH, bottomColor);
+                    int fillW = Math.round(scaledW * charge);
+                    int splitH = Math.round((baseH - 2) * scale);
+
+                    guiGraphics.fill(drawX, drawY, drawX + fillW, drawY + splitH, topColor);
+                    guiGraphics.fill(drawX, drawY + splitH, drawX + fillW, drawY + scaledH, bottomColor);
                 }
             }
-
-            guiGraphics.pose().popPose();
         }
     }
 }
