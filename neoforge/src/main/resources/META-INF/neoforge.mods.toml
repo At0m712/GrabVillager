@@ -5,7 +5,7 @@ issueTrackerURL="https://github.com/TonNom/Grab_Villager/issues"
 displayURL="https://modrinth.com/mod/ton-mod"
 
 [[mods]]
-modId="grab_villager"
+modId="grabvillager"
 version="${version}"
 displayName="Grab Villager"
 description="Un mod pour porter les villageois !"
