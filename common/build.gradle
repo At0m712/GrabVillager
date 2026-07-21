@@ -3,6 +3,19 @@ plugins {
     id 'net.neoforged.moddev'
 }
 
+repositories {
+    mavenCentral()
+    maven {
+        name = 'Minecraft Libraries'
+        url = 'https://libraries.minecraft.net/'
+    }
+    // Décommente ce bloc si tu as besoin de télécharger des mods depuis Modrinth plus tard
+    // maven {
+    //     name = "Modrinth"
+    //     url = "https://api.modrinth.com/maven"
+    // }
+}
+
 neoForge {
     neoFormVersion = neo_form_version
     // Automatically enable AccessTransformers if the file exists
@@ -33,15 +46,8 @@ configurations {
         canBeConsumed = true
     }
 }
-//repositories {
-//       maven {
-//        name = "Modrinth"
-//       url = "https://api.modrinth.com/maven"
-//    }
-//}
 
 artifacts {
     commonJava sourceSets.main.java.sourceDirectories.singleFile
     commonResources sourceSets.main.resources.sourceDirectories.singleFile
 }
-

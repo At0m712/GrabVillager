@@ -3,7 +3,7 @@ package com.atom.grabvillager.neoforge;
 import com.atom.grabvillager.client.GrabVillagerClientLogic;
 import com.atom.grabvillager.client.GrabVillagerConfigScreen;
 import com.atom.grabvillager.client.GrabVillagerOverlay;
-import com.atom.grabvillager.config.GrabVillagerConfig; // <-- Bon import depuis config
+import com.atom.grabvillager.config.GrabVillagerConfig;
 import com.atom.grabvillager.network.VillagerDropPayload;
 import net.minecraft.client.Minecraft;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
@@ -13,6 +13,9 @@ import net.neoforged.neoforge.client.event.RenderGuiEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 public class GrabVillagerClientNeoForge {
+
+    // NOUVEAU : Variable pour retarder l'ouverture de l'interface
+    private static boolean openConfigScreen = false;
 
     public static void registerKeybinds(RegisterKeyMappingsEvent event) {
         // Chargement du fichier JSON
@@ -24,6 +27,12 @@ public class GrabVillagerClientNeoForge {
         GrabVillagerClientLogic.tick((isThrow, charge) -> {
             PacketDistributor.sendToServer(new VillagerDropPayload(isThrow, charge));
         });
+
+        // NOUVEAU : On ouvre l'écran ici, une fois que le tchat est bien fermé
+        if (openConfigScreen) {
+            Minecraft.getInstance().setScreen(new GrabVillagerConfigScreen());
+            openConfigScreen = false;
+        }
     }
 
     public static void onRenderGui(RenderGuiEvent.Post event) {
@@ -35,9 +44,8 @@ public class GrabVillagerClientNeoForge {
         event.getDispatcher().register(
                 net.minecraft.commands.Commands.literal("grabvillager")
                         .executes(context -> {
-                            Minecraft.getInstance().tell(() -> {
-                                Minecraft.getInstance().setScreen(new GrabVillagerConfigScreen());
-                            });
+                            // On demande l'ouverture au prochain tick pour éviter que le tchat ne le ferme
+                            openConfigScreen = true;
                             return 1;
                         })
         );

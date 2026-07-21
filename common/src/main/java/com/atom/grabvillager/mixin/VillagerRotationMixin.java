@@ -1,9 +1,11 @@
 package com.atom.grabvillager.mixin;
 
+import com.atom.grabvillager.client.IVillagerRotationState;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.LivingEntityRenderer;
+import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.npc.Villager;
@@ -16,15 +18,31 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(LivingEntityRenderer.class)
 public class VillagerRotationMixin {
 
-    @Inject(method = "setupRotations", at = @At("TAIL"))
-    private void grabvillager$onSetupRotations(LivingEntity entity, PoseStack poseStack, float bob, float yBodyRot, float partialTick, float scale, CallbackInfo ci) {
-        if (entity instanceof Villager villager && villager.getVehicle() instanceof Player player) {
+    // ÉTAPE 1 : On capture les données de l'entité juste avant le rendu et on les stocke dans notre state
+    @Inject(method = "extractRenderState", at = @At("TAIL"))
+    private void grabvillager$onExtractRenderState(LivingEntity entity, LivingEntityRenderState state, float partialTick, CallbackInfo ci) {
+        if (state instanceof IVillagerRotationState customState) {
+            if (entity instanceof Villager villager && villager.getVehicle() instanceof Player player) {
+                customState.grabvillager$setRidingPlayer(true);
+                customState.grabvillager$setRidingLocalPlayer(player == Minecraft.getInstance().player);
+                customState.grabvillager$setPlayerSwimAmount(player.getSwimAmount(partialTick));
+                customState.grabvillager$setPlayerCrouching(player.isCrouching());
+            } else {
+                customState.grabvillager$setRidingPlayer(false);
+            }
+        }
+    }
 
-            boolean isLocal = player == Minecraft.getInstance().player;
+    // ÉTAPE 2 : On applique les rotations en lisant le state (puisqu'on n'a plus accès à l'entité)
+    @Inject(method = "setupRotations", at = @At("TAIL"))
+    private void grabvillager$onSetupRotations(LivingEntityRenderState state, PoseStack poseStack, float bodyRot, float scale, CallbackInfo ci) {
+        if (state instanceof IVillagerRotationState customState && customState.grabvillager$isRidingPlayer()) {
+
+            boolean isLocal = customState.grabvillager$isRidingLocalPlayer();
             float progress = (!com.atom.grabvillager.config.GrabVillagerConfig.allowTools) ? 1.0f : (isLocal ? com.atom.grabvillager.client.GrabVillagerClientLogic.getChargeProgress() : 0.0f);
 
-            float swimAmount = player.getSwimAmount(partialTick);
-            float sneakAngle = player.isCrouching() ? 28.65f : 0.0f;
+            float swimAmount = customState.grabvillager$getPlayerSwimAmount();
+            float sneakAngle = customState.grabvillager$isPlayerCrouching() ? 28.65f : 0.0f;
 
             poseStack.translate(0.0, 0.9, 0.0);
 
@@ -39,11 +57,11 @@ public class VillagerRotationMixin {
 
             // CORRECTION INVERSE x2 : On passe à +1.0f !
             // L'axe Z local pointant vers le bas, cette valeur positive va l'écraser contre le dos.
-            float sneakZ = player.isCrouching() ? -0.02f : -0.15f;
+            float sneakZ = customState.grabvillager$isPlayerCrouching() ? -0.02f : -0.15f;
             float baseZ = Mth.lerp(swimAmount, sneakZ, 1.0f);
             float offsetZ = baseZ * (1.0f - progress) + 1.2f * progress;
 
-            float sneakY = player.isCrouching() ? -0.1f : -0.2f;
+            float sneakY = customState.grabvillager$isPlayerCrouching() ? -0.1f : -0.2f;
             float baseY = Mth.lerp(swimAmount, sneakY, -0.6f);
             float offsetY = baseY * (1.0f - progress) + -0.2f * progress;
 

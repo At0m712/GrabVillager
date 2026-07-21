@@ -3,13 +3,20 @@
   "minVersion": "0.8",
   "package": "com.atom.grabvillager.mixin",
   "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "EntityPassengerMixin",
+    "EntityForceRideMixin"
+  ],
   "client": [
     "HideCarriedVillagerMixin",
     "PlayerPassengerMixin",
     "PlayerModelMixin",
     "VillagerRotationMixin",
     "HideHandMixin",
-    "GhostVillagerMixin"
+    "GhostVillagerMixin",
+    "PlayerRendererMixin",
+    "PlayerRenderStateMixin",
+    "LivingEntityRenderStateMixin"
   ],
   "injectors": {
     "defaultRequire": 1

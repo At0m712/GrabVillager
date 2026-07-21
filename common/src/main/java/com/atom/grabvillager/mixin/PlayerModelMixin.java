@@ -1,31 +1,31 @@
 package com.atom.grabvillager.mixin;
 
 import com.atom.grabvillager.client.GrabVillagerClientLogic;
+import com.atom.grabvillager.client.IGrabVillagerState;
 import com.atom.grabvillager.config.GrabVillagerConfig;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.PlayerModel;
+import net.minecraft.client.renderer.entity.state.PlayerRenderState;
 import net.minecraft.util.Mth;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.npc.Villager;
-import net.minecraft.world.entity.player.Player;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(PlayerModel.class)
-public class PlayerModelMixin<T extends LivingEntity> {
+public class PlayerModelMixin {
 
     @Inject(method = "setupAnim", at = @At("TAIL"))
-    private void grabvillager$onSetupAnim(T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch, CallbackInfo ci) {
-        if (entity instanceof Player player) {
+    private void grabvillager$onSetupAnim(PlayerRenderState state, CallbackInfo ci) {
 
-            boolean isLocal = player == Minecraft.getInstance().player;
-            boolean isCarrying = !player.getPassengers().isEmpty() && player.getFirstPassenger() instanceof Villager;
-            int throwTicks = isLocal ? GrabVillagerClientLogic.throwAnimTicks : 0;
+        // On récupère nos variables personnalisées depuis le state
+        if (state instanceof IGrabVillagerState customState) {
+            boolean isLocal = customState.grabvillager$isLocal();
+            boolean isCarrying = customState.grabvillager$isCarrying();
+            int throwTicks = customState.grabvillager$getThrowTicks();
+            float chargeProgress = customState.grabvillager$getChargeProgress();
 
             if (isCarrying || throwTicks > 0) {
-                PlayerModel<?> model = (PlayerModel<?>) (Object) this;
+                PlayerModel model = (PlayerModel) (Object) this;
 
                 float targetXRight = model.rightArm.xRot;
                 float targetXLeft = model.leftArm.xRot;
@@ -59,7 +59,7 @@ public class PlayerModelMixin<T extends LivingEntity> {
                     targetZLeft = Mth.lerp(animProgress, -0.15f, model.leftArm.zRot);
 
                 } else if (isCarrying) {
-                    float progress = (!GrabVillagerConfig.allowTools) ? 1.0f : (isLocal ? GrabVillagerClientLogic.getChargeProgress() : 0.0f);
+                    float progress = (!GrabVillagerConfig.allowTools) ? 1.0f : (isLocal ? chargeProgress : 0.0f);
 
                     if (progress > 0.0f) {
                         targetXRight = Mth.lerp(progress, targetXRight, -2.8f);

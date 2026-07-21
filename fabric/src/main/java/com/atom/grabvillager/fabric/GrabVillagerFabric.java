@@ -11,7 +11,6 @@ import net.fabricmc.fabric.api.event.player.UseItemCallback;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.InteractionResultHolder;
 
 public class GrabVillagerFabric implements ModInitializer {
     @Override
@@ -34,8 +33,8 @@ public class GrabVillagerFabric implements ModInitializer {
 
         // 2. Interagir avec un Item (Manger, tirer à l'arc...)
         UseItemCallback.EVENT.register((player, world, hand) -> {
-            if (GrabVillagerLogic.shouldBlockActions(player)) return InteractionResultHolder.fail(player.getItemInHand(hand));
-            return InteractionResultHolder.pass(player.getItemInHand(hand));
+            if (GrabVillagerLogic.shouldBlockActions(player)) return InteractionResult.FAIL;
+            return InteractionResult.PASS;
         });
 
         // 3. Interagir avec un Bloc (Poser un bloc, ouvrir un coffre...)

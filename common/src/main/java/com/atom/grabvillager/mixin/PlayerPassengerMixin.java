@@ -30,7 +30,6 @@ public abstract class PlayerPassengerMixin {
                 backY -= 0.15;
             }
 
-            // On stabilise la racine au centre du joueur qui nage
             if (player.isVisuallySwimming()) {
                 backY = player.getY() + 0.7;
             }
