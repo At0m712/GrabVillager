@@ -10,11 +10,10 @@ import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.RegisterClientCommandsEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import net.neoforged.neoforge.client.event.RenderGuiEvent;
-import net.neoforged.neoforge.network.PacketDistributor;
 
 public class GrabVillagerClientNeoForge {
 
-    // NOUVEAU : Variable pour retarder l'ouverture de l'interface
+    // Variable pour retarder l'ouverture de l'interface
     private static boolean openConfigScreen = false;
 
     public static void registerKeybinds(RegisterKeyMappingsEvent event) {
@@ -25,10 +24,13 @@ public class GrabVillagerClientNeoForge {
 
     public static void onClientTick(ClientTickEvent.Post event) {
         GrabVillagerClientLogic.tick((isThrow, charge) -> {
-            PacketDistributor.sendToServer(new VillagerDropPayload(isThrow, charge));
+            // NOUVEAU SYSTEME 1.21.4+ : On utilise directement la connexion native de Minecraft
+            if (Minecraft.getInstance().getConnection() != null) {
+                Minecraft.getInstance().getConnection().send(new VillagerDropPayload(isThrow, charge));
+            }
         });
 
-        // NOUVEAU : On ouvre l'écran ici, une fois que le tchat est bien fermé
+        // On ouvre l'écran ici, une fois que le tchat est bien fermé
         if (openConfigScreen) {
             Minecraft.getInstance().setScreen(new GrabVillagerConfigScreen());
             openConfigScreen = false;
