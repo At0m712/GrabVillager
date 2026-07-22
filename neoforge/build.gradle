@@ -30,8 +30,12 @@ neoForge {
         client {
             client()
         }
-        data {
-            data()
+        // NOUVEAU : Séparation de la génération de données
+        clientData {
+            clientData()
+        }
+        serverData {
+            serverData()
         }
         server {
             server()

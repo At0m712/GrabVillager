@@ -48,7 +48,7 @@ public class GrabVillagerLogic {
                 }
 
                 // 2. TENTATIVE VANILLA NATURELLE (Réussira sur le Client, échouera sur le Serveur)
-                boolean success = target.startRiding(player, true);
+                boolean success = target.startRiding(player, true, true);
 
                 // 3. FORÇAGE ABSOLU SI LE SERVEUR REFUSE
                 if (!success && !player.level().isClientSide()) {

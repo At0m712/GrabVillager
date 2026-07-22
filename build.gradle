@@ -1,6 +1,5 @@
 plugins {
-    // Vérifie régulièrement les dernières versions sur le site officiel de Fabric
     id 'fabric-loom' version '1.13.+' apply false
-    // Vérifie les dernières versions sur le GitHub de NeoForge
-    id 'net.neoforged.moddev' version '0.1.116' apply false
+    // On cible la toute dernière version de la branche 2.0
+    id 'net.neoforged.moddev' version '2.0.+' apply false
 }
