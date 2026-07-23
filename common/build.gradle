@@ -9,11 +9,6 @@ repositories {
         name = 'Minecraft'
         url = 'https://libraries.minecraft.net/'
     }
-    // Décommente ce bloc si tu as besoin de télécharger des mods depuis Modrinth plus tard
-    // maven {
-    //     name = "Modrinth"
-    //     url = "https://api.modrinth.com/maven"
-    // }
 }
 
 neoForge {
@@ -30,9 +25,10 @@ neoForge {
 }
 
 dependencies {
-    compileOnly group: 'org.spongepowered', name: 'mixin', version: '0.8.5'
+    // CORRECTION : Utilisation du nom de variable standard de ton gradle.properties
+    compileOnly "net.neoforged:neoforge:${neoforge_version}"
 
-    // fabric and neoforge both bundle mixinextras, so it is safe to use it in common
+    compileOnly group: 'org.spongepowered', name: 'mixin', version: '0.8.5'
     compileOnly group: 'io.github.llamalad7', name: 'mixinextras-common', version: '0.3.5'
     annotationProcessor group: 'io.github.llamalad7', name: 'mixinextras-common', version: '0.3.5'
 }
