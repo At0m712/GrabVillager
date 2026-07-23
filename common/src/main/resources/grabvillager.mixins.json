@@ -3,7 +3,6 @@
   "minVersion": "0.8",
   "package": "com.atom.grabvillager.mixin",
   "compatibilityLevel": "JAVA_21",
-  "refmap": "grabvillager.refmap.json",
   "mixins": [
     "EntityPassengerMixin",
     "EntityForceRideMixin"

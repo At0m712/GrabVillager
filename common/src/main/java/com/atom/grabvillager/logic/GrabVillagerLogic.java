@@ -1,5 +1,7 @@
 package com.atom.grabvillager.logic;
 
+import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
+import net.minecraft.network.protocol.game.ClientboundSetPassengersPacket;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -26,7 +28,6 @@ public class GrabVillagerLogic {
     public static InteractionResult tryGrab(Player player, Entity target, InteractionHand hand) {
         if (hand == InteractionHand.MAIN_HAND && target instanceof Villager) {
 
-            // On vérifie que le client est bien accroupi
             if (player.level().isClientSide() && !player.isCrouching() && !player.isShiftKeyDown()) {
                 return InteractionResult.PASS;
             }
@@ -36,34 +37,28 @@ public class GrabVillagerLogic {
                 System.out.println("==================================================");
                 System.out.println("[GrabVillager DEBUG] ORDRE DE PRISE REÇU CÔTÉ : " + side);
 
-                // 1. LEURRE DE POSTURE
                 Pose originalPose = player.getPose();
                 boolean wasShift = player.isShiftKeyDown();
                 player.setPose(Pose.STANDING);
                 player.setShiftKeyDown(false);
 
-                // On détache le villageois par sécurité s'il était buggé sur le serveur
                 if (!player.level().isClientSide() && target.getVehicle() != null) {
                     target.stopRiding();
                 }
 
-                // 2. TENTATIVE VANILLA NATURELLE (Réussira sur le Client, échouera sur le Serveur)
                 boolean success = target.startRiding(player, true, true);
 
-                // 3. FORÇAGE ABSOLU SI LE SERVEUR REFUSE
                 if (!success && !player.level().isClientSide()) {
                     System.out.println("[GrabVillager DEBUG] Le Serveur refuse. Forçage du piratage des variables !");
                     IGrabVillagerVehicle hackTarget = (IGrabVillagerVehicle) target;
                     IGrabVillagerVehicle hackPlayer = (IGrabVillagerVehicle) player;
 
-                    // On modifie la mémoire du serveur manuellement
                     hackTarget.grabvillager$forceSetVehicle(player);
                     hackPlayer.grabvillager$forceAddPassenger(target);
 
-                    success = true; // On force le succès pour la suite
+                    success = true;
                 }
 
-                // 4. RESTAURATION DE LA POSTURE
                 player.setPose(originalPose);
                 player.setShiftKeyDown(wasShift);
 
@@ -87,31 +82,44 @@ public class GrabVillagerLogic {
         }
 
         Entity passenger = player.getFirstPassenger();
+        Vec3 look = player.getLookAngle();
 
-        // 1. Démontage
+        // 1. DÉMONTAGE
         passenger.stopRiding();
 
-        // 2. Forçage de la position de départ au niveau du joueur
-        passenger.setPos(player.getX(), player.getY() + player.getEyeHeight() - 0.5, player.getZ());
+        // 2. SYNCHRONISATION RÉSEAU ABSOLUE (Le cœur de la réparation)
+        // On force le client à vider le dos du joueur sur son écran.
+        player.connection.send(new ClientboundSetPassengersPacket(player));
+
+        // 3. DÉCALAGE DE SÉCURITÉ
+        double spawnX = player.getX() + (look.x * 0.5);
+        double spawnY = player.getY() + player.getEyeHeight() - 0.5;
+        double spawnZ = player.getZ() + (look.z * 0.5);
+
+        passenger.setPos(spawnX, spawnY, spawnZ);
         passenger.setYRot(player.getYRot());
         passenger.setXRot(player.getXRot());
 
-        // 3. Application de la physique
+        // 4. APPLICATION DE LA PHYSIQUE
         if (isThrow) {
-            Vec3 look = player.getLookAngle();
             float velocity = 0.5f + (charge * 1.2f);
             Vec3 movement = new Vec3(look.x * velocity, (look.y * velocity) + 0.5D, look.z * velocity);
 
             passenger.setDeltaMovement(movement);
-            passenger.hurtMarked = true;
-            passenger.hasImpulse = true;
             System.out.println("[GrabVillager DEBUG] Vélocité appliquée avec succès !");
         } else {
             passenger.setDeltaMovement(Vec3.ZERO);
-            passenger.hurtMarked = true;
-            passenger.hasImpulse = true;
             System.out.println("[GrabVillager DEBUG] Posé sur place avec succès.");
         }
+
+        // 5. SYNCHRONISATION PHYSIQUE
+        passenger.hurtMarked = true;
+        passenger.hasImpulse = true;
+        passenger.setOnGround(false);
+
+        // On force le client à voir le villageois s'envoler instantanément
+        player.connection.send(new ClientboundSetEntityMotionPacket(passenger));
+
         System.out.println("==================================================");
     }
 }

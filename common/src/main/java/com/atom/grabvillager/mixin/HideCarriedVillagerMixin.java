@@ -1,30 +1,34 @@
 package com.atom.grabvillager.mixin;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.npc.Villager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(EntityRenderer.class)
+// On cible directement l'entité de base, pas le moteur de rendu !
+@Mixin(Entity.class)
 public class HideCarriedVillagerMixin {
 
-    // L'astuce ultime : on cible "render" ET son nom codé Fabric "method_3936"
-    @Inject(method = {"render", "method_3936"}, at = @At("HEAD"), cancellable = true)
-    private void grabvillager$onRender(Entity entity, float entityYaw, float partialTick, PoseStack poseStack, MultiBufferSource buffer, int packedLight, CallbackInfo ci) {
+    // isInvisible n'a aucun paramètre, Fabric ne pourra pas se tromper
+    @Inject(method = "isInvisible", at = @At("HEAD"), cancellable = true)
+    private void grabvillager$hideWhenCarried(CallbackInfoReturnable<Boolean> cir) {
 
-        // On vérifie que l'entité est un villageois et qu'il est sur le joueur local
-        if (entity instanceof Villager && entity.getVehicle() instanceof LocalPlayer) {
+        // On vérifie que l'entité actuelle est bien un villageois
+        if ((Object) this instanceof Villager villager) {
 
-            // Si le joueur est en vue à la première personne, on annule purement et simplement le rendu
-            if (Minecraft.getInstance().options.getCameraType().isFirstPerson()) {
-                ci.cancel();
+            // On vérifie s'il est porté par le joueur local
+            if (villager.getVehicle() instanceof LocalPlayer) {
+
+                // Si on est en vue à la première personne
+                if (Minecraft.getInstance().options.getCameraType().isFirstPerson()) {
+
+                    // On force le jeu à considérer le villageois comme invisible
+                    cir.setReturnValue(true);
+                }
             }
         }
     }

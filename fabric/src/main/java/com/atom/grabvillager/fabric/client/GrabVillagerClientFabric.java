@@ -13,11 +13,12 @@ import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.Minecraft;
+import net.minecraft.network.chat.Component;
 
 public class GrabVillagerClientFabric implements ClientModInitializer {
 
-    // NOUVEAU : Variable pour retarder l'ouverture de l'interface
-    private static boolean openConfigScreen = false;
+    // NOUVEAU : Un compteur pour retarder l'ouverture de l'écran
+    private static int screenOpenDelay = 0;
 
     @Override
     public void onInitializeClient() {
@@ -31,10 +32,13 @@ public class GrabVillagerClientFabric implements ClientModInitializer {
                 ClientPlayNetworking.send(new VillagerDropPayload(isThrow, charge));
             });
 
-            // NOUVEAU : On ouvre l'écran ici, une fois que le tchat est bien fermé
-            if (openConfigScreen) {
-                Minecraft.getInstance().setScreen(new GrabVillagerConfigScreen());
-                openConfigScreen = false;
+            // GESTION DU COMPTE À REBOURS
+            if (screenOpenDelay > 0) {
+                screenOpenDelay--;
+                // Quand le compteur tombe à 0, le tchat est 100% fermé, on peut ouvrir !
+                if (screenOpenDelay == 0) {
+                    client.setScreen(new GrabVillagerConfigScreen());
+                }
             }
         });
 
@@ -46,8 +50,12 @@ public class GrabVillagerClientFabric implements ClientModInitializer {
         ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> {
             dispatcher.register(ClientCommandManager.literal("grabvillager")
                     .executes(context -> {
-                        // On demande l'ouverture au prochain tick pour éviter que le tchat ne le ferme
-                        openConfigScreen = true;
+                        // Retour visuel dans le tchat
+                        context.getSource().sendFeedback(Component.literal("§aOpening the Grab Villager configuration..."));
+
+                        // On lance le compte à rebours : on attend 2 ticks avant d'ouvrir le menu
+                        screenOpenDelay = 2;
+
                         return 1;
                     }));
         });

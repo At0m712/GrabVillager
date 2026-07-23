@@ -27,8 +27,8 @@ public class GrabVillagerNeoForge {
         // Inscription à l'attaque d'entité (Clic gauche)
         NeoForge.EVENT_BUS.addListener(this::onAttackEntity);
 
-        // Code Client Uniquement
-        if (net.neoforged.fml.loading.FMLEnvironment.dist.isClient()) {
+        // Code Client Uniquement (La vraie méthode statique pour la 1.21.9)
+        if (net.neoforged.fml.loading.FMLEnvironment.getDist().isClient()) {
             modEventBus.addListener(GrabVillagerClientNeoForge::registerKeybinds);
             NeoForge.EVENT_BUS.addListener(GrabVillagerClientNeoForge::onClientTick);
             NeoForge.EVENT_BUS.addListener(GrabVillagerClientNeoForge::onRenderGui);

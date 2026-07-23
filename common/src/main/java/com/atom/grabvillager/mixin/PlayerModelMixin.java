@@ -4,7 +4,9 @@ import com.atom.grabvillager.client.GrabVillagerClientLogic;
 import com.atom.grabvillager.config.GrabVillagerConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.PlayerModel;
-import net.minecraft.world.entity.LivingEntity;
+// Nouvel import indispensable pour la 1.21.9
+import net.minecraft.client.renderer.entity.state.AvatarRenderState;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.util.Mth;
 import org.spongepowered.asm.mixin.Mixin;
@@ -12,22 +14,25 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+// Plus besoin du "<T extends LivingEntity>"
 @Mixin(PlayerModel.class)
-public class PlayerModelMixin<T extends LivingEntity> {
+public class PlayerModelMixin {
 
-    // On cible la méthode classique de la 1.21.1 avec tous ses paramètres
-    @Inject(method = "setupAnim", at = @At("TAIL"))
-    private void grabvillager$onSetupAnim(T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch, CallbackInfo ci) {
+    // On cible setupAnim avec son tout nouveau paramètre unique : AvatarRenderState
+    @Inject(method = "setupAnim(Lnet/minecraft/client/renderer/entity/state/AvatarRenderState;)V", at = @At("TAIL"))
+    private void grabvillager$onSetupAnim(AvatarRenderState state, CallbackInfo ci) {
 
-        // 1. On calcule nos variables directement grâce à l'entité
-        boolean isLocal = entity == Minecraft.getInstance().player;
-        boolean isCarrying = !entity.getPassengers().isEmpty() && entity.getFirstPassenger() instanceof Villager;
-        int throwTicks = isLocal ? GrabVillagerClientLogic.throwAnimTicks : 0;
-        float chargeProgress = isLocal ? GrabVillagerClientLogic.getChargeProgress() : 0.0f;
+        // 1. On récupère le joueur local (le modèle ne connaît plus l'entité en 1.21.9)
+        Player localPlayer = Minecraft.getInstance().player;
+        if (localPlayer == null) return;
+
+        boolean isCarrying = !localPlayer.getPassengers().isEmpty() && localPlayer.getFirstPassenger() instanceof Villager;
+        int throwTicks = GrabVillagerClientLogic.throwAnimTicks;
+        float chargeProgress = GrabVillagerClientLogic.getChargeProgress();
 
         // 2. Si le joueur porte un villageois ou est en train de le lancer
         if (isCarrying || throwTicks > 0) {
-            // LA CORRECTION EST ICI : On retire les <?>
+
             PlayerModel model = (PlayerModel) (Object) this;
 
             float targetXRight = model.rightArm.xRot;
@@ -62,7 +67,7 @@ public class PlayerModelMixin<T extends LivingEntity> {
                 targetZLeft = Mth.lerp(animProgress, -0.15f, model.leftArm.zRot);
 
             } else if (isCarrying) {
-                float progress = (!GrabVillagerConfig.allowTools) ? 1.0f : (isLocal ? chargeProgress : 0.0f);
+                float progress = (!GrabVillagerConfig.allowTools) ? 1.0f : chargeProgress;
 
                 if (progress > 0.0f) {
                     targetXRight = Mth.lerp(progress, targetXRight, -2.8f);

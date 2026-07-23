@@ -77,9 +77,11 @@ public class GrabVillagerConfigScreen extends Screen {
 
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
-        super.renderBackground(guiGraphics, mouseX, mouseY, partialTicks);
-        guiGraphics.drawCenteredString(this.font, this.title, this.width / 2, 15, 0xFFFFFF);
+        // On laisse super.render s'occuper de TOUT (le fond flouté ET les boutons)
         super.render(guiGraphics, mouseX, mouseY, partialTicks);
+
+        // On dessine simplement le titre par-dessus le tout
+        guiGraphics.drawCenteredString(this.font, this.title, this.width / 2, 15, 0xFFFFFF);
     }
 
     // --- CLASSE INTERNE DU SLIDER PERSONNALISÉ ---
