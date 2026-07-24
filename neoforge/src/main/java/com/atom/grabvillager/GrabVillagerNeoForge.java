@@ -40,7 +40,7 @@ public class GrabVillagerNeoForge {
         PayloadRegistrar registrar = event.registrar("grabvillager");
         registrar.playToServer(
                 VillagerDropPayload.TYPE,
-                VillagerDropPayload.CODEC,
+                VillagerDropPayload.STREAM_CODEC,
                 (payload, context) -> {
                     context.enqueueWork(() -> {
                         GrabVillagerLogic.handleDropOrThrow(

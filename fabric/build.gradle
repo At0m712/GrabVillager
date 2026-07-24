@@ -25,8 +25,13 @@ sourceSets {
     }
 }
 
-// LA CORRECTION DU DOUBLON EST ICI : On ignore les fichiers en double
+// CORRECTION 1 : On ignore les fichiers en double lors de la copie des ressources (lang, models...)
 tasks.withType(ProcessResources).configureEach {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+// CORRECTION 2 : On ignore les fichiers en double lors de la création des archives .jar (sourcesJar, etc.)
+tasks.withType(Jar).configureEach {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
