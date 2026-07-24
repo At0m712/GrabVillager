@@ -7,7 +7,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Pose;
-import net.minecraft.world.entity.npc.Villager;
+import net.minecraft.world.entity.npc.villager.Villager;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
@@ -84,14 +84,10 @@ public class GrabVillagerLogic {
         Entity passenger = player.getFirstPassenger();
         Vec3 look = player.getLookAngle();
 
-        // 1. DÉMONTAGE
         passenger.stopRiding();
 
-        // 2. SYNCHRONISATION RÉSEAU ABSOLUE (Le cœur de la réparation)
-        // On force le client à vider le dos du joueur sur son écran.
         player.connection.send(new ClientboundSetPassengersPacket(player));
 
-        // 3. DÉCALAGE DE SÉCURITÉ
         double spawnX = player.getX() + (look.x * 0.5);
         double spawnY = player.getY() + player.getEyeHeight() - 0.5;
         double spawnZ = player.getZ() + (look.z * 0.5);
@@ -100,7 +96,6 @@ public class GrabVillagerLogic {
         passenger.setYRot(player.getYRot());
         passenger.setXRot(player.getXRot());
 
-        // 4. APPLICATION DE LA PHYSIQUE
         if (isThrow) {
             float velocity = 0.5f + (charge * 1.2f);
             Vec3 movement = new Vec3(look.x * velocity, (look.y * velocity) + 0.5D, look.z * velocity);
@@ -112,12 +107,10 @@ public class GrabVillagerLogic {
             System.out.println("[GrabVillager DEBUG] Posé sur place avec succès.");
         }
 
-        // 5. SYNCHRONISATION PHYSIQUE
+        // L'instruction hurtMarked = true suffit en 1.21 pour flagger le mouvement
         passenger.hurtMarked = true;
-        passenger.hasImpulse = true;
         passenger.setOnGround(false);
 
-        // On force le client à voir le villageois s'envoler instantanément
         player.connection.send(new ClientboundSetEntityMotionPacket(passenger));
 
         System.out.println("==================================================");

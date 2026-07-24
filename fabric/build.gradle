@@ -13,6 +13,23 @@ dependencies {
     modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
 }
 
+// LA MAGIE MULTILOADER : Fabric lit directement les sources de common !
+sourceSets {
+    main {
+        java {
+            srcDirs += '../common/src/main/java'
+        }
+        resources {
+            srcDirs += '../common/src/main/resources'
+        }
+    }
+}
+
+// LA CORRECTION DU DOUBLON EST ICI : On ignore les fichiers en double
+tasks.withType(ProcessResources).configureEach {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
 loom {
     def aw = project(':common').file("src/main/resources/${mod_id}.accesswidener")
     if (aw.exists()) {

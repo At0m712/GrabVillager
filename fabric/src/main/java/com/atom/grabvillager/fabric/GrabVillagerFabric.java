@@ -16,7 +16,7 @@ public class GrabVillagerFabric implements ModInitializer {
     @Override
     public void onInitialize() {
         // Enregistrement du Packet Réseau
-        PayloadTypeRegistry.playC2S().register(VillagerDropPayload.TYPE, VillagerDropPayload.CODEC);
+        PayloadTypeRegistry.playC2S().register(VillagerDropPayload.TYPE, VillagerDropPayload.STREAM_CODEC);
 
         // Réception de la commande de Lancer côté Serveur
         ServerPlayNetworking.registerGlobalReceiver(VillagerDropPayload.TYPE, (payload, context) -> {

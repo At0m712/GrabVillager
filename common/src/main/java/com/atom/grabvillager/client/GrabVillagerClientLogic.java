@@ -1,8 +1,8 @@
 package com.atom.grabvillager.client;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
-import net.minecraft.ResourceLocation;
 import org.lwjgl.glfw.GLFW;
 
 public class GrabVillagerClientLogic {
@@ -69,10 +69,11 @@ public class GrabVillagerClientLogic {
         wasDown = isDown;
     }
 
-    // Déclaration de la touche (R par défaut)
+    // La syntaxe officielle et définitive pour Minecraft 1.21.10+
     public static final KeyMapping DROP_KEY = new KeyMapping(
             "key.grabvillager.drop",
+            InputConstants.Type.KEYSYM,
             GLFW.GLFW_KEY_R,
-            "key.categories.grabvillager"
+            KeyMapping.Category.MISC
     );
 }

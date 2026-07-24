@@ -3,11 +3,11 @@ package com.atom.grabvillager.mixin;
 import com.atom.grabvillager.client.GrabVillagerClientLogic;
 import com.atom.grabvillager.config.GrabVillagerConfig;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.model.PlayerModel;
+import net.minecraft.client.model.player.PlayerModel;
 // Nouvel import indispensable pour la 1.21.9
 import net.minecraft.client.renderer.entity.state.AvatarRenderState;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.npc.Villager;
+import net.minecraft.world.entity.npc.villager.Villager;
 import net.minecraft.util.Mth;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -87,13 +87,6 @@ public class PlayerModelMixin {
             model.rightArm.zRot = targetZRight;
             model.leftArm.zRot = targetZLeft;
 
-            // 4. On synchronise les manches avec les bras
-            model.rightSleeve.xRot = model.rightArm.xRot;
-            model.leftSleeve.xRot = model.leftArm.xRot;
-            model.rightSleeve.yRot = model.rightArm.yRot;
-            model.leftSleeve.yRot = model.leftArm.yRot;
-            model.rightSleeve.zRot = model.rightArm.zRot;
-            model.leftSleeve.zRot = model.leftArm.zRot;
         }
     }
 }
