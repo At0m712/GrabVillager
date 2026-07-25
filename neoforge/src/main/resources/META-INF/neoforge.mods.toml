@@ -9,7 +9,7 @@ modId="grabvillager"
 version="${version}"
 displayName="Grab Villager"
 description="Un mod pour porter les villageois !"
-authors="Toi"
+authors="atom"
 
 # Dépendance à NeoForge
 [[dependencies.grab_villager]]
@@ -26,3 +26,6 @@ type="required"
 versionRange="[1.21,1.22),[26,27)"
 ordering="NONE"
 side="BOTH"
+
+[[mixins]]
+config = "grabvillager.mixins.json"

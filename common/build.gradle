@@ -6,7 +6,7 @@ plugins {
 repositories {
     mavenCentral()
     maven {
-        name = 'Minecraft'
+        name = 'Minecraft Libraries'
         url = 'https://libraries.minecraft.net/'
     }
     // Décommente ce bloc si tu as besoin de télécharger des mods depuis Modrinth plus tard

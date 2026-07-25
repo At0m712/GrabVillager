@@ -3,45 +3,70 @@ plugins {
     id 'net.neoforged.moddev'
 }
 
+// AJOUT VITAL : Le serveur officiel de Mojang pour trouver jtracy et les bibliothèques 1.21.4+
 repositories {
-    mavenCentral()
-
     maven {
-        name = "Minecraft"
+        name = "Minecraft Libraries"
         url = "https://libraries.minecraft.net/"
     }
 }
+
+// On sécurise la lecture des variables depuis le gradle.properties
+def neoVersion = rootProject.hasProperty('neoforge_version') ? rootProject.property('neoforge_version') : '21.4.157'
+def parchVersion = rootProject.hasProperty('parchment_version') ? rootProject.property('parchment_version') : '2024.11.17'
+def parchMc = rootProject.hasProperty('parchment_minecraft') ? rootProject.property('parchment_minecraft') : '1.21.4'
+def modId = rootProject.hasProperty('mod_id') ? rootProject.property('mod_id') : 'grabvillager'
+
 neoForge {
-    version = neoforge_version
-    // Automatically enable neoforge AccessTransformers if the file exists
-    def at = project(':common').file('src/main/resources/META-INF/accesstransformer.cfg')
-    if (at.exists()) {
-        accessTransformers.add(at.absolutePath)
-    }
-    parchment {
-        minecraftVersion = parchment_minecraft
-        mappingsVersion = parchment_version
-    }
+    // Spécifie la version de NeoForge à utiliser
+    version = neoVersion
+
+    // DÉSACTIVÉ TEMPORAIREMENT pour la 1.21.4
+    // NeoForge utilisera les mappings officiels de Mojang pour éviter le crash.
+    // parchment {
+    //     mappingsVersion = parchVersion
+    //     minecraftVersion = parchMc
+    // }
+
+    // Système de création des configurations de lancement
     runs {
-        configureEach {
-            systemProperty('neoforge.enabledGameTestNamespaces', mod_id)
-            ideName = "NeoForge ${it.name.capitalize()} (${project.path})" // Unify the run config names with fabric
-        }
         client {
             client()
-        }
-        data {
-            data()
+            systemProperty 'neoforge.enabledGameTestNamespaces', modId
         }
         server {
             server()
+            systemProperty 'neoforge.enabledGameTestNamespaces', modId
+            programArgument '--nogui'
         }
     }
+
+    // Déclare ton mod au système
     mods {
-        "${mod_id}" {
+        "${modId}" {
             sourceSet sourceSets.main
         }
     }
 }
 
-sourceSets.main.resources { srcDir 'src/generated/resources' }
+// LA MAGIE MULTILOADER : NeoForge lit directement les sources de common !
+sourceSets {
+    main {
+        java {
+            srcDirs += '../common/src/main/java'
+        }
+        resources {
+            srcDirs += '../common/src/main/resources'
+        }
+    }
+}
+
+// CORRECTION 1 : On ignore les fichiers en double lors de la copie des ressources
+tasks.withType(ProcessResources).configureEach {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+// CORRECTION 2 : On ignore les fichiers en double lors de la création des archives .jar
+tasks.withType(Jar).configureEach {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
