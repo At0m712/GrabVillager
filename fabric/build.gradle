@@ -1,6 +1,7 @@
 plugins {
     id 'multiloader-loader'
     id 'fabric-loom'
+    id "me.modmuss50.mod-publish-plugin" version "2.0.0"
 }
 
 dependencies {
@@ -34,5 +35,42 @@ loom {
             ideConfigGenerated(true)
             runDir('runs/server')
         }
+    }
+}
+publishMods {
+    file = jar.archiveFile
+    changelog = providers.fileContents(layout.projectDirectory.file("CHANGELOG.md")).asText.get()
+    type = STABLE
+    version = "1.0.1-1.21.5"
+    modLoaders.add("fabric")
+    modLoaders.add("quilt")
+
+    curseforge {
+        displayName = file.map { it.asFile.name }
+        projectId = "1617359"
+        accessToken = providers.environmentVariable("CURSEFORGE_TOKEN")
+        changelogType = "markdown"
+
+        minecraftVersionRange {
+            start = "1.21.5"
+            end = "1.21.5"
+        }
+
+        client = true
+        server = false
+        requires("fabric-api")
+    }
+
+    modrinth {
+        displayName = "Grab Villager 1.0.1-1.21.5}"
+        projectId = "FJX2GwgJ"
+        accessToken = providers.environmentVariable("MODRINTH_TOKEN")
+
+        minecraftVersionRange {
+            start = "1.21.5"
+            end = "1.21.5"
+        }
+
+        requires("fabric-api")
     }
 }
