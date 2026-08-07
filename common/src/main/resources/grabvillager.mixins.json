@@ -16,7 +16,8 @@
     "GhostVillagerMixin",
     "PlayerRendererMixin",
     "PlayerRenderStateMixin",
-    "LivingEntityRenderStateMixin"
+    "LivingEntityRenderStateMixin",
+    "RopeRendererMixin"
   ],
   "injectors": {
     "defaultRequire": 1
