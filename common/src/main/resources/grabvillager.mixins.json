@@ -14,7 +14,8 @@
     "VillagerRotationMixin",
     "HideHandMixin",
     "GhostVillagerMixin",
-    "LivingEntityRenderStateMixin"
+    "LivingEntityRenderStateMixin",
+    "RopeRendererMixin"
   ],
   "injectors": {
     "defaultRequire": 1
