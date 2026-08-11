@@ -1,0 +1,38 @@
+{
+	"schemaVersion": 1,
+	"id": "grabvillager",
+	"version": "${version}",
+	"name": "GrabVillager",
+	"description": "This is an example description! Tell everyone what your mod is about!",
+	"authors": [
+		"atom"
+	],
+	"contact": {
+		"homepage": "https://fabricmc.net/",
+		"sources": "https://github.com/FabricMC/fabric-example-mod"
+	},
+	"license": "MIT",
+	"icon": "assets/grabvillager/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"atom.grabvillager.GrabVillager"
+		],
+		"client": [
+			"atom.grabvillager.client.GrabVillagerClient"
+		]
+	},
+	"mixins": [
+		"grabvillager.mixins.json",
+		{
+			"config": "grabvillager.client.mixins.json",
+			"environment": "client"
+		}
+	],
+	"depends": {
+		"fabricloader": ">=0.19.3",
+		"minecraft": "~26.1",
+		"java": ">=25",
+		"fabric-api": "*"
+	}
+}

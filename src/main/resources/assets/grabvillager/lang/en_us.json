@@ -1,0 +1,12 @@
+{
+  "key.categories.grab_villager": "Grab Villager",
+  "key.grab_villager.grab": "Grab / Drop Villager",
+  "key.grab_villager.throw": "Throw Villager",
+  "text.autoconfig.grab_villager.title": "Grab Villager Configuration",
+  "text.autoconfig.grab_villager.option.throwMultiplier": "Throw Force Multiplier",
+  "text.autoconfig.grab_villager.option.throwMultiplier.@Tooltip": "Adjusts how far and fast the villager is thrown when charging the throw.",
+  "text.autoconfig.grab_villager.option.enableThrow": "Enable Throwing",
+  "text.autoconfig.grab_villager.option.enableThrow.@Tooltip": "Allows players to throw grabbed villagers instead of just dropping them.",
+  "text.autoconfig.grab_villager.option.requireSneakToGrab": "Require Sneak to Grab",
+  "text.autoconfig.grab_villager.option.requireSneakToGrab.@Tooltip": "If enabled, players must hold the sneak key (Shift) to pick up a villager."
+}

@@ -1,0 +1,12 @@
+{
+  "key.categories.grab_villager": "Porter un villageois (Grab Villager)",
+  "key.grab_villager.grab": "Prendre / Lâcher le villageois",
+  "key.grab_villager.throw": "Lancer le villageois",
+  "text.autoconfig.grab_villager.title": "Configuration de Grab Villager",
+  "text.autoconfig.grab_villager.option.throwMultiplier": "Multiplicateur de lancer",
+  "text.autoconfig.grab_villager.option.throwMultiplier.@Tooltip": "Ajuste la distance et la vitesse à laquelle le villageois est propulsé après un clic maintenu.",
+  "text.autoconfig.grab_villager.option.enableThrow": "Activer le lancer",
+  "text.autoconfig.grab_villager.option.enableThrow.@Tooltip": "Permet aux joueurs de lancer les villageois portés au lieu de simplement les déposer.",
+  "text.autoconfig.grab_villager.option.requireSneakToGrab": "S'accroupir pour prendre",
+  "text.autoconfig.grab_villager.option.requireSneakToGrab.@Tooltip": "Si activé, les joueurs doivent s'accroupir (Maj) pour pouvoir soulever un villageois."
+}
