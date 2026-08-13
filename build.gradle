@@ -88,7 +88,7 @@ publishMods {
 	file = jar.archiveFile
 	changelog = providers.fileContents(layout.projectDirectory.file("CHANGELOG.md")).asText.get()
 	type = STABLE
-	version = "1.0.0-26.1"
+	version = "1.0.2-26.2"
 	modLoaders.add("fabric")
 	modLoaders.add("quilt")
 
@@ -99,8 +99,8 @@ publishMods {
 		changelogType = "markdown"
 
 		minecraftVersionRange {
-			start = "26.1"
-			end = "26.1.2"
+			start = "26.2"
+			end = "26.2"
 		}
 
 		client = true
@@ -115,8 +115,8 @@ publishMods {
 		accessToken = providers.environmentVariable("MODRINTH_TOKEN")
 
 		minecraftVersionRange {
-			start = "26.1"
-			end = "26.1.2"
+			start = "26.2"
+			end = "26.2"
 		}
 
 		requires("fabric-api")

@@ -3,11 +3,12 @@ package atom.grabvillager.client;
 import atom.grabvillager.config.GrabVillagerConfig;
 import atom.grabvillager.logic.GrabVillagerLogic;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphicsExtractor; // <-- LA CLASSE OFFICIELLE
 import net.minecraft.client.player.LocalPlayer;
 
 public class GrabVillagerOverlay {
 
+    // On utilise bien GuiGraphics ici !
     public static void render(GuiGraphicsExtractor guiGraphics) {
         Minecraft mc = Minecraft.getInstance();
         LocalPlayer player = mc.player;
@@ -48,7 +49,7 @@ public class GrabVillagerOverlay {
                 default: topColor = charge >= 1.0f ? 0xFF80FF20 : 0xFFDDDD22; bottomColor = charge >= 1.0f ? 0xFF408010 : 0xFFAA8811; break;
             }
 
-            // SOLUTION 1.21.6 : Mathématiques pures au lieu des matrices !
+            // SOLUTION 1.21.6+ : Mathématiques pures au lieu des matrices !
             // On calcule les dimensions finales avec l'échelle (barSize).
             float scale = GrabVillagerConfig.barSize;
             int scaledW = Math.round(baseW * scale);

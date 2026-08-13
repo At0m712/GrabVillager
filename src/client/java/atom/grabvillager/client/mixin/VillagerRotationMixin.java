@@ -41,7 +41,9 @@ public class VillagerRotationMixin {
         if (state instanceof IVillagerRotationState customState && customState.grabvillager$isRidingPlayer()) {
 
             boolean isLocal = customState.grabvillager$isRidingLocalPlayer();
-            float progress = (GrabVillagerConfig.allowTools) ? 1.0f : (isLocal ? GrabVillagerClientLogic.getChargeProgress() : 0.0f);
+
+            // LA CORRECTION EST ICI : Ajout du "!" devant GrabVillagerConfig.allowTools
+            float progress = (!GrabVillagerConfig.allowTools) ? 1.0f : (isLocal ? GrabVillagerClientLogic.getChargeProgress() : 0.0f);
 
             float swimAmount = customState.grabvillager$getPlayerSwimAmount();
             float sneakAngle = customState.grabvillager$isPlayerCrouching() ? 28.65f : 0.0f;

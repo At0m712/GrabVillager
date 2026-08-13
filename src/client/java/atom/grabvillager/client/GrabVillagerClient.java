@@ -9,6 +9,7 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 
 import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.minecraft.client.KeyMapping;
+import net.minecraft.client.gui.screens.Screen; // L'import magique pour les écrans !
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.resources.Identifier;
 import org.lwjgl.glfw.GLFW;
@@ -49,10 +50,12 @@ public class GrabVillagerClient implements ClientModInitializer {
             if (screenOpenDelay > 0) {
                 screenOpenDelay--;
                 if (screenOpenDelay == 0) {
-                    client.setScreen(new GrabVillagerConfigScreen());
+                    // LA SOLUTION : On force le cast en (Screen) pour que le compilateur accepte !
+                    client.setScreenAndShow((Screen) new GrabVillagerConfigScreen());
                 }
             }
         });
+
         HudElementRegistry.addLast(
                 Identifier.fromNamespaceAndPath("grabvillager", "overlay"),
                 (guiGraphics, deltaTracker) -> {

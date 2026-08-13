@@ -62,7 +62,7 @@ public class GrabVillagerConfigScreen extends Screen {
         // Bouton de Sauvegarde
         this.addRenderableWidget(Button.builder(Component.literal("Sauvegarder & Quitter"), b -> {
             GrabVillagerConfig.save();
-            this.minecraft.setScreen(null);
+            this.minecraft.setScreenAndShow(null);
         }).bounds(midX - 100, y, 200, 20).build());
 
         updateLabels();
