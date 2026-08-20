@@ -35,12 +35,9 @@ public class GrabVillagerLogic {
             }
 
             if (player.getPassengers().isEmpty()) {
-                String side = player.level().isClientSide() ? "CLIENT" : "SERVEUR";
-                System.out.println("==================================================");
-                System.out.println("[GrabVillager DEBUG] ORDRE DE PRISE REÇU CÔTÉ : " + side);
-
                 Pose originalPose = player.getPose();
                 boolean wasShift = player.isShiftKeyDown();
+
                 player.setPose(Pose.STANDING);
                 player.setShiftKeyDown(false);
 
@@ -51,21 +48,15 @@ public class GrabVillagerLogic {
                 boolean success = target.startRiding(player, true, true);
 
                 if (!success && !player.level().isClientSide()) {
-                    System.out.println("[GrabVillager DEBUG] Le Serveur refuse. Forçage du piratage des variables !");
                     IGrabVillagerVehicle hackTarget = (IGrabVillagerVehicle) target;
                     IGrabVillagerVehicle hackPlayer = (IGrabVillagerVehicle) player;
 
                     hackTarget.grabvillager$forceSetVehicle(player);
                     hackPlayer.grabvillager$forceAddPassenger(target);
-
-                    success = true;
                 }
 
                 player.setPose(originalPose);
                 player.setShiftKeyDown(wasShift);
-
-                System.out.println("[GrabVillager DEBUG] Attachement final côté " + side + " : " + success);
-                System.out.println("==================================================");
 
                 return InteractionResult.SUCCESS;
             }
@@ -74,12 +65,7 @@ public class GrabVillagerLogic {
     }
 
     public static void handleDropOrThrow(ServerPlayer player, boolean isThrow, float charge) {
-        System.out.println("==================================================");
-        System.out.println("[GrabVillager DEBUG] Lancement de la commande DROP/THROW");
-
         if (!isCarryingVillager(player)) {
-            System.out.println("[GrabVillager DEBUG] ERREUR CRITIQUE : Le Serveur pense que ton dos est VIDE !");
-            System.out.println("==================================================");
             return;
         }
 
@@ -101,20 +87,14 @@ public class GrabVillagerLogic {
         if (isThrow) {
             float velocity = 0.5f + (charge * 1.2f);
             Vec3 movement = new Vec3(look.x * velocity, (look.y * velocity) + 0.5D, look.z * velocity);
-
             passenger.setDeltaMovement(movement);
-            System.out.println("[GrabVillager DEBUG] Vélocité appliquée avec succès !");
         } else {
             passenger.setDeltaMovement(Vec3.ZERO);
-            System.out.println("[GrabVillager DEBUG] Posé sur place avec succès.");
         }
 
-        // L'instruction hurtMarked = true suffit en 1.21 pour flagger le mouvement
         passenger.hurtMarked = true;
         passenger.setOnGround(false);
 
         player.connection.send(new ClientboundSetEntityMotionPacket(passenger));
-
-        System.out.println("==================================================");
     }
 }
