@@ -1,4 +1,7 @@
 {
+  "key.category.grabvillager.main": "Grab Villager (Mod)",
+  "key.grabvillager.drop": "Lâcher / Lancer le villageois",
+
   "key.categories.grab_villager": "Porter un villageois (Grab Villager)",
   "key.grab_villager.grab": "Prendre / Lâcher le villageois",
   "key.grab_villager.throw": "Lancer le villageois",
@@ -8,5 +11,26 @@
   "text.autoconfig.grab_villager.option.enableThrow": "Activer le lancer",
   "text.autoconfig.grab_villager.option.enableThrow.@Tooltip": "Permet aux joueurs de lancer les villageois portés au lieu de simplement les déposer.",
   "text.autoconfig.grab_villager.option.requireSneakToGrab": "S'accroupir pour prendre",
-  "text.autoconfig.grab_villager.option.requireSneakToGrab.@Tooltip": "Si activé, les joueurs doivent s'accroupir (Maj) pour pouvoir soulever un villageois."
+  "text.autoconfig.grab_villager.option.requireSneakToGrab.@Tooltip": "Si activé, les joueurs doivent s'accroupir (Maj) pour pouvoir soulever un villageois.",
+
+
+  "text.grabvillager.config.title": "Personnalisation Grab Villager",
+  "text.grabvillager.config.throwMultiplier": "Distance Lancer",
+  "text.grabvillager.config.allowTools": "Outils avec Villageois",
+  "text.grabvillager.config.barColorIndex": "Couleur Jauge",
+  "text.grabvillager.config.barVertical": "Orientation",
+  "text.grabvillager.config.barSize": "Taille Jauge",
+  "text.grabvillager.config.barOffsetX": "Position Écran X",
+  "text.grabvillager.config.barOffsetY": "Position Écran Y",
+  "text.grabvillager.config.save": "Sauvegarder & Quitter",
+
+  "text.grabvillager.config.state.yes": "OUI",
+  "text.grabvillager.config.state.no": "NON",
+  "text.grabvillager.config.state.vertical": "Verticale",
+  "text.grabvillager.config.state.horizontal": "Horizontale",
+
+  "text.grabvillager.config.color.vanilla": "Vanilla",
+  "text.grabvillager.config.color.ocean": "Océan",
+  "text.grabvillager.config.color.lava": "Lave",
+  "text.grabvillager.config.color.ender": "Ender"
 }

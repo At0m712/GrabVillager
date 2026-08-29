@@ -1,4 +1,7 @@
 {
+  "key.category.grabvillager.main": "Grab Villager (Mod)",
+  "key.grabvillager.drop": "Drop / Throw Villager",
+
   "key.categories.grab_villager": "Grab Villager",
   "key.grab_villager.grab": "Grab / Drop Villager",
   "key.grab_villager.throw": "Throw Villager",
@@ -8,5 +11,25 @@
   "text.autoconfig.grab_villager.option.enableThrow": "Enable Throwing",
   "text.autoconfig.grab_villager.option.enableThrow.@Tooltip": "Allows players to throw grabbed villagers instead of just dropping them.",
   "text.autoconfig.grab_villager.option.requireSneakToGrab": "Require Sneak to Grab",
-  "text.autoconfig.grab_villager.option.requireSneakToGrab.@Tooltip": "If enabled, players must hold the sneak key (Shift) to pick up a villager."
+  "text.autoconfig.grab_villager.option.requireSneakToGrab.@Tooltip": "If enabled, players must hold the sneak key (Shift) to pick up a villager.",
+
+  "text.grabvillager.config.title": "Grab Villager Customization",
+  "text.grabvillager.config.throwMultiplier": "Throw Distance",
+  "text.grabvillager.config.allowTools": "Tools with Villager",
+  "text.grabvillager.config.barColorIndex": "Gauge Color",
+  "text.grabvillager.config.barVertical": "Orientation",
+  "text.grabvillager.config.barSize": "Gauge Size",
+  "text.grabvillager.config.barOffsetX": "Screen Position X",
+  "text.grabvillager.config.barOffsetY": "Screen Position Y",
+  "text.grabvillager.config.save": "Save & Quit",
+
+  "text.grabvillager.config.state.yes": "YES",
+  "text.grabvillager.config.state.no": "NO",
+  "text.grabvillager.config.state.vertical": "Vertical",
+  "text.grabvillager.config.state.horizontal": "Horizontal",
+
+  "text.grabvillager.config.color.vanilla": "Vanilla",
+  "text.grabvillager.config.color.ocean": "Ocean",
+  "text.grabvillager.config.color.lava": "Lava",
+  "text.grabvillager.config.color.ender": "Ender"
 }
