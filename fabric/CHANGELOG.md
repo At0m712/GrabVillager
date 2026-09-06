@@ -1,1 +1,1 @@
-Add rope for 1.21.3
+Added French and English translations for the settings menu and keybinds.
