@@ -11,6 +11,7 @@ import net.fabricmc.fabric.api.event.player.UseItemCallback;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.npc.villager.Villager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,8 +37,17 @@ public class GrabVillager implements ModInitializer {
 
         // 3. Interagir avec une Entité
         UseEntityCallback.EVENT.register((player, world, hand, entity, hitResult) -> {
+            // EXCEPTION POUR LES ÉCHANGES : On laisse toujours passer l'interaction avec un villageois
+            if (entity instanceof Villager) {
+                if (GrabVillagerLogic.isCarryingVillager(player)) {
+                    return InteractionResult.PASS;
+                }
+                return GrabVillagerLogic.tryGrab(player, entity, hand);
+            }
+
+            // Pour les autres entités, on applique le blocage si nécessaire
             if (GrabVillagerLogic.shouldBlockActions(player)) return InteractionResult.FAIL;
-            return GrabVillagerLogic.tryGrab(player, entity, hand);
+            return InteractionResult.PASS;
         });
 
         // 4. Interagir avec un Item
