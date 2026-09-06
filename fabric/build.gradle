@@ -41,7 +41,7 @@ publishMods {
     file = jar.archiveFile
     changelog = providers.fileContents(layout.projectDirectory.file("CHANGELOG.md")).asText.get()
     type = STABLE
-    version = "1.0.1-1.21.10"
+    version = "1.0.2-1.21.10"
     modLoaders.add("fabric")
     modLoaders.add("quilt")
 
@@ -62,7 +62,7 @@ publishMods {
     }
 
     modrinth {
-        displayName = "Grab Villager 1.0.1-1.21.10}"
+        displayName = "Grab Villager 1.0.2-1.21.10"
         projectId = "FJX2GwgJ"
         accessToken = providers.environmentVariable("MODRINTH_TOKEN")
 

@@ -1,1 +1,1 @@
-Add a Rope for style in 1.21.10.
+Added French and English translations for the settings menu and keybinds.
