@@ -1,1 +1,1 @@
-Add Rope for style in 1.21.9.
+Added French and English translations for the settings menu and keybinds.
