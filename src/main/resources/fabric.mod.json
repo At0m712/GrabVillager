@@ -3,14 +3,10 @@
 	"id": "grabvillager",
 	"version": "${version}",
 	"name": "GrabVillager",
-	"description": "This is an example description! Tell everyone what your mod is about!",
+	"description": "Allows players to pick up, carry, and throw villagers!",
 	"authors": [
 		"atom"
 	],
-	"contact": {
-		"homepage": "https://fabricmc.net/",
-		"sources": "https://github.com/FabricMC/fabric-example-mod"
-	},
 	"license": "MIT",
 	"icon": "assets/grabvillager/icon.png",
 	"environment": "*",

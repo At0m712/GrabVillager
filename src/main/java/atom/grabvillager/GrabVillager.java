@@ -24,6 +24,7 @@ public class GrabVillager implements ModInitializer {
     @Override
     public void onInitialize() {
         LOG.info("Le mod Grab Villager est chargé !");
+        atom.grabvillager.config.GrabVillagerConfig.load();
 
         // 1. CORRECTION NOMENCLATURE : playC2S() devient serverboundPlay()
         PayloadTypeRegistry.serverboundPlay().register(VillagerDropPayload.PACKET_ID, VillagerDropPayload.PACKET_CODEC);

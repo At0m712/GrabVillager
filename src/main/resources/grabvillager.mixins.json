@@ -4,11 +4,9 @@
   "package": "atom.grabvillager.mixin",
   "compatibilityLevel": "JAVA_25",
   "mixins": [
-    "EntityPassengerMixin",
-    "EntityForceRideMixin",
+    "EntityMixin",
     "PlayerPassengerMixin",
-    "GhostVillagerMixin",
-    "EntityMixin"
+    "GhostVillagerMixin"
   ],
 
   "injectors": {

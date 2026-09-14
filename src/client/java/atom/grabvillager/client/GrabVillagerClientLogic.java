@@ -43,13 +43,13 @@ public class GrabVillagerClientLogic {
         GrabVillagerLogic.clientPlayerId = client.player.getUUID();
         GrabVillagerLogic.clientChargeProgress = chargeProgress;
 
-        boolean isDown = GrabVillagerClient.dropKey.isDown();
+        boolean isCarrying = GrabVillagerLogic.isCarryingVillager(client.player);
+        boolean isDown = isCarrying && GrabVillagerClient.dropKey.isDown();
 
         if (isDown) {
             ticksHeld++;
             chargeProgress = Math.min(1.0f, ticksHeld / 20.0f);
         } else if (wasDown) {
-
             boolean isThrow = ticksHeld > 5;
             float finalCharge = isThrow ? chargeProgress : 0.0f;
 
@@ -59,7 +59,9 @@ public class GrabVillagerClientLogic {
 
             callback.execute(isThrow, finalCharge);
 
-
+            ticksHeld = 0;
+            chargeProgress = 0.0f;
+        } else {
             ticksHeld = 0;
             chargeProgress = 0.0f;
         }

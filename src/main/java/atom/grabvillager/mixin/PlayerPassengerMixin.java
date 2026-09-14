@@ -17,7 +17,7 @@ public abstract class PlayerPassengerMixin {
     private void grabvillager$onPositionRider(Entity passenger, Entity.MoveFunction callback, CallbackInfo ci) {
         if ((Object) this instanceof Player player && passenger instanceof Villager villager) {
 
-            boolean isLocal = GrabVillagerLogic.clientPlayerId != null && player.getUUID().equals(GrabVillagerLogic.clientPlayerId);
+            boolean isLocal = player.level().isClientSide() && GrabVillagerLogic.clientPlayerId != null && player.getUUID().equals(GrabVillagerLogic.clientPlayerId);
             float progress = (!GrabVillagerConfig.allowTools) ? 1.0f : (isLocal ? GrabVillagerLogic.clientChargeProgress : 0.0f);
 
             villager.setYBodyRot(player.yBodyRot);
