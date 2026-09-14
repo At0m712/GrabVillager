@@ -1,37 +1,28 @@
 package atom.grabvillager.client.mixin;
 
 import atom.grabvillager.client.GrabVillagerClientLogic;
+import atom.grabvillager.client.IGrabVillagerState;
 import atom.grabvillager.config.GrabVillagerConfig;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.player.PlayerModel;
 import net.minecraft.client.renderer.entity.state.AvatarRenderState;
 import net.minecraft.util.Mth;
-import net.minecraft.world.entity.npc.villager.Villager;
-import net.minecraft.world.entity.player.Player;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-// Nouvel import indispensable pour la 1.21.9
-
-// Plus besoin du "<T extends LivingEntity>"
 @Mixin(PlayerModel.class)
 public class PlayerModelMixin {
 
-    // On cible setupAnim avec son tout nouveau paramètre unique : AvatarRenderState
     @Inject(method = "setupAnim(Lnet/minecraft/client/renderer/entity/state/AvatarRenderState;)V", at = @At("TAIL"))
     private void grabvillager$onSetupAnim(AvatarRenderState state, CallbackInfo ci) {
+        if (!(state instanceof IGrabVillagerState customState)) return;
 
-        // 1. On récupère le joueur local (le modèle ne connaît plus l'entité en 1.21.9)
-        Player localPlayer = Minecraft.getInstance().player;
-        if (localPlayer == null) return;
+        boolean isCarrying = customState.grabvillager$isCarrying();
+        int throwTicks = customState.grabvillager$getThrowTicks();
+        float chargeProgress = customState.grabvillager$getChargeProgress();
 
-        boolean isCarrying = !localPlayer.getPassengers().isEmpty() && localPlayer.getFirstPassenger() instanceof Villager;
-        int throwTicks = GrabVillagerClientLogic.throwAnimTicks;
-        float chargeProgress = GrabVillagerClientLogic.getChargeProgress();
-
-        // 2. Si le joueur porte un villageois ou est en train de le lancer
+        // Si ce joueur porte un villageois ou est en train de le lancer
         if (isCarrying || throwTicks > 0) {
 
             PlayerModel model = (PlayerModel) (Object) this;

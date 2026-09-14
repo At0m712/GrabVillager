@@ -84,12 +84,12 @@ public class GrabVillagerConfigScreen extends Screen {
         btnOrient.setMessage(Component.translatable("text.grabvillager.config.barVertical").append(" : ").append(orientState));
     }
 
-    public void render(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTicks) {
+    @Override
+    public void extractRenderState(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTicks) {
         super.extractRenderState(guiGraphics, mouseX, mouseY, partialTicks);
         guiGraphics.centeredText(this.font, this.title, this.width / 2, 15, 0xFFFFFF);
     }
 
-    // --- CLASSE INTERNE DU SLIDER PERSONNALISÉ ---
     private static class ConfigSlider extends AbstractSliderButton {
         private final String translationKey;
         private final double min, max;

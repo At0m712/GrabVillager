@@ -1,12 +1,12 @@
 package atom.grabvillager.logic;
 
+import atom.grabvillager.config.GrabVillagerConfig;
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
 import net.minecraft.network.protocol.game.ClientboundSetPassengersPacket;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.npc.villager.Villager;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
@@ -20,7 +20,7 @@ public class GrabVillagerLogic {
     }
 
     public static boolean shouldBlockActions(Player player) {
-        return isCarryingVillager(player) && !atom.grabvillager.config.GrabVillagerConfig.allowTools;
+        return isCarryingVillager(player) && !GrabVillagerConfig.allowTools;
     }
 
     public static boolean isOwnPassenger(Player player, Entity target) {
@@ -30,35 +30,24 @@ public class GrabVillagerLogic {
     public static InteractionResult tryGrab(Player player, Entity target, InteractionHand hand) {
         if (hand == InteractionHand.MAIN_HAND && target instanceof Villager) {
 
-            if (player.level().isClientSide() && !player.isCrouching() && !player.isShiftKeyDown()) {
+            // S'accroupir (Shift) est obligatoire pour attraper, sinon on laisse passer l'interaction (commerce)
+            if (!player.isCrouching() && !player.isShiftKeyDown()) {
                 return InteractionResult.PASS;
             }
 
             if (player.getPassengers().isEmpty()) {
-                Pose originalPose = player.getPose();
-                boolean wasShift = player.isShiftKeyDown();
-
-                player.setPose(Pose.STANDING);
-                player.setShiftKeyDown(false);
-
                 if (!player.level().isClientSide() && target.getVehicle() != null) {
                     target.stopRiding();
                 }
 
                 boolean success = target.startRiding(player, true, true);
 
-                if (!success && !player.level().isClientSide()) {
-                    IGrabVillagerVehicle hackTarget = (IGrabVillagerVehicle) target;
-                    IGrabVillagerVehicle hackPlayer = (IGrabVillagerVehicle) player;
-
-                    hackTarget.grabvillager$forceSetVehicle(player);
-                    hackPlayer.grabvillager$forceAddPassenger(target);
+                if (success && !player.level().isClientSide() && player instanceof ServerPlayer serverPlayer) {
+                    ClientboundSetPassengersPacket packet = new ClientboundSetPassengersPacket(player);
+                    serverPlayer.level().getChunkSource().sendToTrackingPlayersAndSelf(player, packet);
                 }
 
-                player.setPose(originalPose);
-                player.setShiftKeyDown(wasShift);
-
-                return InteractionResult.SUCCESS;
+                return success ? InteractionResult.SUCCESS : InteractionResult.PASS;
             }
         }
         return InteractionResult.PASS;
@@ -69,12 +58,15 @@ public class GrabVillagerLogic {
             return;
         }
 
+        charge = Math.max(0.0f, Math.min(1.0f, charge));
+
         Entity passenger = player.getFirstPassenger();
         Vec3 look = player.getLookAngle();
 
         passenger.stopRiding();
 
-        player.connection.send(new ClientboundSetPassengersPacket(player));
+        ClientboundSetPassengersPacket passPacket = new ClientboundSetPassengersPacket(player);
+        player.level().getChunkSource().sendToTrackingPlayersAndSelf(player, passPacket);
 
         double spawnX = player.getX() + (look.x * 0.5);
         double spawnY = player.getY() + player.getEyeHeight() - 0.5;
@@ -85,7 +77,8 @@ public class GrabVillagerLogic {
         passenger.setXRot(player.getXRot());
 
         if (isThrow) {
-            float velocity = 0.5f + (charge * 1.2f);
+            float multiplier = Math.max(0.1f, Math.min(3.0f, GrabVillagerConfig.throwMultiplier));
+            float velocity = (0.5f + (charge * 1.2f)) * multiplier;
             Vec3 movement = new Vec3(look.x * velocity, (look.y * velocity) + 0.5D, look.z * velocity);
             passenger.setDeltaMovement(movement);
         } else {
@@ -95,6 +88,7 @@ public class GrabVillagerLogic {
         passenger.hurtMarked = true;
         passenger.setOnGround(false);
 
-        player.connection.send(new ClientboundSetEntityMotionPacket(passenger));
+        ClientboundSetEntityMotionPacket motionPacket = new ClientboundSetEntityMotionPacket(passenger);
+        player.level().getChunkSource().sendToTrackingPlayersAndSelf(passenger, motionPacket);
     }
-}
+}

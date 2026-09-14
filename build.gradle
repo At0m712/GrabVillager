@@ -88,7 +88,7 @@ publishMods {
 	file = jar.archiveFile
 	changelog = providers.fileContents(layout.projectDirectory.file("CHANGELOG.md")).asText.get()
 	type = STABLE
-	version = "1.0.2-26.1"
+	version = project.mod_version
 	modLoaders.add("fabric")
 	modLoaders.add("quilt")
 
@@ -104,7 +104,7 @@ publishMods {
 		}
 
 		client = true
-		server = false
+		server = true
 		requires("fabric-api")
 	}
 

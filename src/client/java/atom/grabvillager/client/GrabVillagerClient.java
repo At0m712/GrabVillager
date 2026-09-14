@@ -50,8 +50,7 @@ public class GrabVillagerClient implements ClientModInitializer {
             if (screenOpenDelay > 0) {
                 screenOpenDelay--;
                 if (screenOpenDelay == 0) {
-                    // LA SOLUTION : On force le cast en (Screen) pour que le compilateur accepte !
-                    client.setScreenAndShow((Screen) new GrabVillagerConfigScreen());
+                    client.setScreenAndShow(new GrabVillagerConfigScreen());
                 }
             }
         });

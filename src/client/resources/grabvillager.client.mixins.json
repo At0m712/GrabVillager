@@ -3,11 +3,12 @@
 	"package": "atom.grabvillager.client.mixin",
 	"compatibilityLevel": "JAVA_25",
 	"client": [
+		"AvatarRenderStateMixin",
+		"AvatarRendererMixin",
 		"HideCarriedVillagerMixin",
+		"HideHandMixin",
 		"LivingEntityRenderStateMixin",
-		"MixinMinecraft",
 		"PlayerModelMixin",
-		"MixinTitleScreen",
 		"VillagerRotationMixin"
 	],
 	"injectors": {
