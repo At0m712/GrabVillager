@@ -16,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(ItemInHandRenderer.class)
 public class HideHandMixin {
 
-    @Inject(method = "renderArmWithItem", at = @At("HEAD"), cancellable = true)
+    @Inject(method = {"submitArmWithItem", "renderArmWithItem"}, at = @At("HEAD"), cancellable = true, require = 0)
     private void grabvillager$hideHandWhenCarrying(AbstractClientPlayer player, float f1, float f2, InteractionHand hand, float f3, ItemStack itemStack, float f4, PoseStack poseStack, SubmitNodeCollector buffer, int packedLight, CallbackInfo ci) {
 
         // 1. SÉCURITÉ : Si la configuration AUTORISE l'usage des outils, on ne cache rien du tout.
