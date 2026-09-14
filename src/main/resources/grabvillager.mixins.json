@@ -6,7 +6,8 @@
   "mixins": [
     "EntityMixin",
     "PlayerPassengerMixin",
-    "GhostVillagerMixin"
+    "GhostVillagerMixin",
+    "VillagerFlightMixin"
   ],
 
   "injectors": {

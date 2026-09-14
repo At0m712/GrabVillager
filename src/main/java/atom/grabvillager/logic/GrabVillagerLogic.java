@@ -81,6 +81,14 @@ public class GrabVillagerLogic {
             float velocity = (0.5f + (charge * 1.2f)) * multiplier;
             Vec3 movement = new Vec3(look.x * velocity, (look.y * velocity) + 0.5D, look.z * velocity);
             passenger.setDeltaMovement(movement);
+
+            if (passenger instanceof IThrownVillager thrownVillager) {
+                thrownVillager.grabvillager$setThrownTicks(100);
+            }
+
+            player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
+                    net.minecraft.sounds.SoundEvents.VILLAGER_NO, net.minecraft.sounds.SoundSource.NEUTRAL,
+                    1.0f, 1.2f + (charge * 0.3f));
         } else {
             passenger.setDeltaMovement(Vec3.ZERO);
         }
