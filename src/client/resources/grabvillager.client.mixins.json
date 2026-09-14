@@ -9,6 +9,9 @@
 		"HideHandMixin",
 		"LivingEntityRenderStateMixin",
 		"PlayerModelMixin",
+		"VillagerModelMixin",
+		"VillagerRenderStateMixin",
+		"VillagerRendererMixin",
 		"VillagerRotationMixin"
 	],
 	"injectors": {
