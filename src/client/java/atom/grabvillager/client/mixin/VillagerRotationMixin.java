@@ -24,7 +24,7 @@ public class VillagerRotationMixin {
     @Inject(method = "extractRenderState", at = @At("TAIL"))
     private void grabvillager$onExtractRenderState(LivingEntity entity, LivingEntityRenderState state, float partialTick, CallbackInfo ci) {
         if (state instanceof IVillagerRotationState customState) {
-            if (entity instanceof Villager villager && villager.getVehicle() instanceof Player player) {
+            if (atom.grabvillager.logic.GrabVillagerLogic.isGrabbable(entity) && entity.getVehicle() instanceof Player player) {
                 customState.grabvillager$setRidingPlayer(true);
                 customState.grabvillager$setRidingLocalPlayer(player == Minecraft.getInstance().player);
                 customState.grabvillager$setPlayerSwimAmount(player.getSwimAmount(partialTick));

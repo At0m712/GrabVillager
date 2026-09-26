@@ -1,8 +1,8 @@
 package atom.grabvillager.mixin;
 
+import atom.grabvillager.logic.GrabVillagerLogic;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.npc.villager.Villager;
 import net.minecraft.world.entity.player.Player;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -13,10 +13,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(Entity.class)
 public abstract class EntityMixin {
 
-    // 1. Autoriser le joueur à accepter un passager villageois
+    // 1. Autoriser le joueur à accepter un passager villageois ou grabbable
     @Inject(method = "canAddPassenger", at = @At("HEAD"), cancellable = true)
     private void grabvillager$allowPlayerPassenger(Entity passenger, CallbackInfoReturnable<Boolean> cir) {
-        if ((Object) this instanceof Player && passenger instanceof Villager) {
+        if ((Object) this instanceof Player && GrabVillagerLogic.isGrabbable(passenger)) {
             cir.setReturnValue(true);
         }
     }
@@ -35,7 +35,7 @@ public abstract class EntityMixin {
         at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/EntityType;canSerialize()Z")
     )
     private boolean grabvillager$allowPlayerVehicleSerialize(EntityType<?> instance) {
-        if ((Object) this instanceof Villager) {
+        if (GrabVillagerLogic.isGrabbable((Entity) (Object) this)) {
             return true;
         }
         return instance.canSerialize();

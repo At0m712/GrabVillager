@@ -38,8 +38,8 @@ public class GrabVillager implements ModInitializer {
 
         // 3. Interagir avec une Entité
         UseEntityCallback.EVENT.register((player, world, hand, entity, hitResult) -> {
-            // EXCEPTION POUR LES ÉCHANGES : On laisse toujours passer l'interaction avec un villageois
-            if (entity instanceof Villager) {
+            // EXCEPTION POUR LES ÉCHANGES / SOINS : On laisse toujours passer l'interaction avec un villageois/trader/zombie villageois
+            if (GrabVillagerLogic.isGrabbable(entity)) {
                 if (GrabVillagerLogic.isCarryingVillager(player)) {
                     return InteractionResult.PASS;
                 }

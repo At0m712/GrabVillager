@@ -3,7 +3,7 @@ package atom.grabvillager.mixin;
 import atom.grabvillager.logic.GrabVillagerLogic;
 import atom.grabvillager.config.GrabVillagerConfig;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.npc.villager.Villager;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -15,15 +15,17 @@ public abstract class PlayerPassengerMixin {
 
     @Inject(method = "positionRider(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/entity/Entity$MoveFunction;)V", at = @At("HEAD"), cancellable = true)
     private void grabvillager$onPositionRider(Entity passenger, Entity.MoveFunction callback, CallbackInfo ci) {
-        if ((Object) this instanceof Player player && passenger instanceof Villager villager) {
+        if ((Object) this instanceof Player player && GrabVillagerLogic.isGrabbable(passenger)) {
 
             boolean isLocal = player.level().isClientSide() && GrabVillagerLogic.clientPlayerId != null && player.getUUID().equals(GrabVillagerLogic.clientPlayerId);
             float progress = (!GrabVillagerConfig.allowTools) ? 1.0f : (isLocal ? GrabVillagerLogic.clientChargeProgress : 0.0f);
 
-            villager.setYBodyRot(player.yBodyRot);
-            villager.yBodyRotO = player.yBodyRotO;
-            villager.setYHeadRot(player.yHeadRot);
-            villager.yHeadRotO = player.yHeadRotO;
+            if (passenger instanceof LivingEntity livingPassenger) {
+                livingPassenger.setYBodyRot(player.yBodyRot);
+                livingPassenger.yBodyRotO = player.yBodyRotO;
+                livingPassenger.setYHeadRot(player.yHeadRot);
+                livingPassenger.yHeadRotO = player.yHeadRotO;
+            }
 
             double backY = player.getY() + (player.getBbHeight() * 0.4);
 
@@ -41,7 +43,7 @@ public abstract class PlayerPassengerMixin {
             double offsetX = 0.0;
             double offsetZ = 0.0;
 
-            if (villager.isBaby()) {
+            if (passenger instanceof LivingEntity living && living.isBaby()) {
 
                 double backwardDistance = 0.4 * progress;
 
