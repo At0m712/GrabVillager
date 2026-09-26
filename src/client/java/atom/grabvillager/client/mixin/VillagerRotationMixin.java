@@ -51,11 +51,11 @@ public class VillagerRotationMixin {
             poseStack.translate(0.0, 0.9, 0.0);
 
             float angleY = 180.0f * (1.0f - progress);
-            poseStack.mulPose(Axis.YP.rotationDegrees(angleY));
+            poseStack.rotateDegrees(Axis.YP, angleY);
 
             float baseAngleX = Mth.lerp(swimAmount, sneakAngle, 90.0f);
             float angleX = baseAngleX * (1.0f - progress) + 90.0f * progress;
-            poseStack.mulPose(Axis.XP.rotationDegrees(angleX));
+            poseStack.rotateDegrees(Axis.XP, angleX);
 
             poseStack.translate(0.0, -0.9, 0.0);
 

@@ -93,7 +93,7 @@ public class GrabVillagerLogic {
             passenger.setDeltaMovement(Vec3.ZERO);
         }
 
-        passenger.hurtMarked = true;
+        passenger.syncVelocity = true;
         passenger.setOnGround(false);
 
         ClientboundSetEntityMotionPacket motionPacket = new ClientboundSetEntityMotionPacket(passenger);

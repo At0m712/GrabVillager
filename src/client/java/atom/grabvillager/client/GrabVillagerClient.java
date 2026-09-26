@@ -12,7 +12,6 @@ import net.minecraft.client.KeyMapping;
 import net.minecraft.client.gui.screens.Screen; // L'import magique pour les écrans !
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.resources.Identifier;
-import org.lwjgl.glfw.GLFW;
 
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
@@ -36,8 +35,7 @@ public class GrabVillagerClient implements ClientModInitializer {
         // 2. Enregistrer la touche directement ici au lancement du client
         dropKey = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 "key.grabvillager.drop",
-                InputConstants.Type.KEYSYM,
-                GLFW.GLFW_KEY_G,
+                InputConstants.KEY_G,
                 GRAB_CATEGORY
         ));
 
