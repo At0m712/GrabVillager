@@ -1,13 +1,21 @@
 package atom.grabvillager.logic;
 
 import atom.grabvillager.config.GrabVillagerConfig;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
 import net.minecraft.network.protocol.game.ClientboundSetPassengersPacket;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.monster.zombie.ZombieVillager;
 import net.minecraft.world.entity.npc.villager.Villager;
+import net.minecraft.world.entity.npc.wanderingtrader.WanderingTrader;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
@@ -15,8 +23,45 @@ public class GrabVillagerLogic {
     public static java.util.UUID clientPlayerId = null;
     public static float clientChargeProgress = 0.0f;
 
+    public static final TagKey<EntityType<?>> GRABBABLE_TAG = TagKey.create(
+            Registries.ENTITY_TYPE,
+            Identifier.fromNamespaceAndPath("grabvillager", "grabbable")
+    );
+
+    public static boolean isGrabbable(Entity entity) {
+        if (entity == null) return false;
+        try {
+            if (entity.getType().builtInRegistryHolder().is(GRABBABLE_TAG)) return true;
+        } catch (Exception ignored) {}
+        return entity instanceof Villager || entity instanceof WanderingTrader || entity instanceof ZombieVillager;
+    }
+
+    public static SoundEvent getSurpriseSound(Entity entity) {
+        if (entity instanceof ZombieVillager) return SoundEvents.ZOMBIE_VILLAGER_AMBIENT;
+        if (entity instanceof WanderingTrader) return SoundEvents.WANDERING_TRADER_NO;
+        return SoundEvents.VILLAGER_NO;
+    }
+
+    public static SoundEvent getThrowSound(Entity entity) {
+        if (entity instanceof ZombieVillager) return SoundEvents.ZOMBIE_VILLAGER_HURT;
+        if (entity instanceof WanderingTrader) return SoundEvents.WANDERING_TRADER_HURT;
+        return SoundEvents.VILLAGER_NO;
+    }
+
+    public static SoundEvent getFlightSound(Entity entity) {
+        if (entity instanceof ZombieVillager) return SoundEvents.ZOMBIE_VILLAGER_AMBIENT;
+        if (entity instanceof WanderingTrader) return SoundEvents.WANDERING_TRADER_NO;
+        return SoundEvents.VILLAGER_NO;
+    }
+
+    public static SoundEvent getLandingSound(Entity entity) {
+        if (entity instanceof ZombieVillager) return SoundEvents.ZOMBIE_VILLAGER_AMBIENT;
+        if (entity instanceof WanderingTrader) return SoundEvents.WANDERING_TRADER_YES;
+        return SoundEvents.VILLAGER_YES;
+    }
+
     public static boolean isCarryingVillager(Player player) {
-        return !player.getPassengers().isEmpty() && player.getFirstPassenger() instanceof Villager;
+        return !player.getPassengers().isEmpty() && isGrabbable(player.getFirstPassenger());
     }
 
     public static boolean shouldBlockActions(Player player) {
@@ -28,7 +73,7 @@ public class GrabVillagerLogic {
     }
 
     public static InteractionResult tryGrab(Player player, Entity target, InteractionHand hand) {
-        if (hand == InteractionHand.MAIN_HAND && target instanceof Villager) {
+        if (hand == InteractionHand.MAIN_HAND && isGrabbable(target)) {
 
             // S'accroupir (Shift) est obligatoire pour attraper, sinon on laisse passer l'interaction (commerce)
             if (!player.isCrouching() && !player.isShiftKeyDown()) {
@@ -45,6 +90,10 @@ public class GrabVillagerLogic {
                 if (success && !player.level().isClientSide() && player instanceof ServerPlayer serverPlayer) {
                     ClientboundSetPassengersPacket packet = new ClientboundSetPassengersPacket(player);
                     serverPlayer.level().getChunkSource().sendToTrackingPlayersAndSelf(player, packet);
+
+                    // Son de surprise à l'attrapage : Un petit "Huuuuh ?" surpris et aigu dès qu'on le soulève.
+                    serverPlayer.level().playSound(null, target.getX(), target.getY(), target.getZ(),
+                            getSurpriseSound(target), target.getSoundSource(), 1.0f, 1.45f);
                 }
 
                 return success ? InteractionResult.SUCCESS : InteractionResult.PASS;
@@ -87,7 +136,7 @@ public class GrabVillagerLogic {
             }
 
             player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
-                    net.minecraft.sounds.SoundEvents.VILLAGER_NO, net.minecraft.sounds.SoundSource.NEUTRAL,
+                    getThrowSound(passenger), passenger.getSoundSource(),
                     1.0f, 1.2f + (charge * 0.3f));
         } else {
             passenger.setDeltaMovement(Vec3.ZERO);

@@ -1,9 +1,15 @@
-# Grab Villager 1.0.5 (Minecraft 26.3)
+# Grab Villager 1.0.6 (Minecraft 26.3)
 
 ### What's New:
-- **Minecraft 26.3 Support**: Updated dependencies for Minecraft 26.3 and Fabric API 0.161.0.
-- **Flight Panic Animation**: Villagers now comically wiggle and flail their legs, arms, and head in mid-air when thrown!
-- **Flight Trajectory & Particles**: Added trajectory particle trails (clouds, crit sparks, emeralds) and landing smoke poof effects.
-- **Sound Effects**: Alarmed sound on throw and relief sound upon landing safely.
-- **Trading & Mounting Fixes**: Restored trading with villagers when upright (sneak required to grab) and cleaned up vanilla riding logic.
-- **Multiplayer Arms Sync**: Independent arm rendering per player via AvatarRenderState.
+- **Audio Immersion & Doppler Effect**:
+  - **Surprise Sound**: Entities emit a high-pitched surprised "Huuuuh?!" sound when lifted.
+  - **Doppler Flight Screams**: Mid-air screams now feature a dynamic Doppler pitch drop as entities fly and travel through the air.
+  - **Landing Relief**: Relieved sound played safely upon touchdown.
+- **Entity Compatibility**:
+  - Full support for grabbing, carrying, and throwing **Wandering Traders** and **Zombie Villagers**!
+  - Curing and trading remained accessible when interacting without sneaking.
+- **Datapack Tag System (`grabvillager:grabbable`)**:
+  - Modpack and map creators can now define any custom entity types to be grabbable via standard `#grabvillager:grabbable` tags.
+  - Default tag includes Villagers, Wandering Traders, Zombie Villagers, and Trader Llamas.
+- **All Previous 26.3 Features**:
+  - Mid-air panic animation, trajectory particles, safe landings, config GUI (`/grabvillager`), and multiplayer arm synchronizations.

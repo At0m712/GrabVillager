@@ -20,9 +20,9 @@ public class HideHandMixin {
             return;
         }
 
-        // 2. Si les outils sont INTERDITS, on vérifie si on porte un villageois
+        // 2. Si les outils sont INTERDITS, on vérifie si on porte une entité grabbable
         var player = Minecraft.getInstance().player;
-        if (player != null && player.getPassengers().stream().anyMatch(entity -> entity instanceof Villager)) {
+        if (player != null && player.getPassengers().stream().anyMatch(atom.grabvillager.logic.GrabVillagerLogic::isGrabbable)) {
             // On annule l'affichage de la main et de l'objet
             ci.cancel();
         }
