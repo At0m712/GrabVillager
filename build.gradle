@@ -1,124 +1,93 @@
 plugins {
-	id 'net.fabricmc.fabric-loom' version "${loom_version}"
-	id 'maven-publish'
-	id "me.modmuss50.mod-publish-plugin" version "2.0.0"
+    id 'java-library'
+    id 'net.neoforged.moddev' version '2.0.147'
+    id "me.modmuss50.mod-publish-plugin" version "0.8.4"
 }
 
-version = project.mod_version
+version = "${project.mod_version}"
 group = project.maven_group
 
-repositories {
-	// Add repositories to retrieve artifacts from in here.
-	// You should only use this when depending on other mods because
-	// Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
-	// See https://docs.gradle.org/current/userguide/declaring_repositories.html
-	// for more information about repositories.
-}
-
-loom {
-	splitEnvironmentSourceSets()
-
-	mods {
-		"grabvillager" {
-			sourceSet sourceSets.main
-			sourceSet sourceSets.client
-		}
-	}
-}
-
-dependencies {
-
-	minecraft "com.mojang:minecraft:${project.minecraft_version}"
-
-	implementation "net.fabricmc:fabric-loader:${project.loader_version}"
-
-	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
-}
-processResources {
-	def version = project.version
-	inputs.property "version", version
-
-	filesMatching("fabric.mod.json") {
-		expand "version": version
-	}
-}
-
-tasks.withType(JavaCompile).configureEach {
-	it.options.release = 25
+base {
+    archivesName = 'grabvillager-neoforge'
 }
 
 java {
-	// Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
-	// if it is present.
-	// If you remove this line, sources will not be generated.
-	withSourcesJar()
-	toolchain.languageVersion = JavaLanguageVersion.of(25)
-
-	sourceCompatibility = JavaVersion.VERSION_25
-	targetCompatibility = JavaVersion.VERSION_25
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
 }
 
-jar {
-	def projectName = project.name
-	inputs.property "projectName", projectName
-
-	from("LICENSE") {
-		rename { "${it}_$projectName"}
-	}
+sourceSets {
+    main {
+        java {
+            srcDir 'src/client/java'
+        }
+        resources {
+            srcDir 'src/client/resources'
+        }
+    }
 }
 
-// configure the maven publication
-publishing {
-	publications {
-		create("mavenJava", MavenPublication) {
-			from components.java
-		}
-	}
+processResources {
+    var replaceProperties = [
+            minecraft_version      : minecraft_version,
+            neoforge_version       : neoforge_version,
+            version                : mod_version
+    ]
+    inputs.properties replaceProperties
 
-	// See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
-	repositories {
-		// Add repositories to publish to here.
-		// Notice: This block does NOT have the same function as the block in the top level.
-		// The repositories here will be used for publishing your artifact, not for
-		// retrieving dependencies.
-	}
+    filesMatching('META-INF/neoforge.mods.toml') {
+        expand replaceProperties
+    }
+}
+
+neoForge {
+    version = project.neoforge_version
+
+    runs {
+        client {
+            client()
+        }
+        server {
+            server()
+        }
+    }
+
+    mods {
+        grabvillager {
+            sourceSet sourceSets.main
+        }
+    }
 }
 
 publishMods {
-	file = jar.archiveFile
-	changelog = providers.fileContents(layout.projectDirectory.file("CHANGELOG.md")).asText.get()
-	type = STABLE
-	version = project.mod_version
-	modLoaders.add("fabric")
-	modLoaders.add("quilt")
+    file = jar.archiveFile
+    changelog = providers.fileContents(layout.projectDirectory.file("CHANGELOG.md")).asText.get()
+    type = STABLE
+    version = "${project.mod_version}-neoforge"
+    modLoaders.add("neoforge")
 
-	curseforge {
-		displayName = file.map { it.asFile.name }
-		projectId = project.curseforge_id
-		accessToken = providers.environmentVariable("CURSEFORGE_TOKEN")
-		changelogType = "markdown"
+    curseforge {
+        displayName = file.map { it.asFile.name }
+        projectId = project.curseforge_id
+        accessToken = providers.environmentVariable("CURSEFORGE_TOKEN")
+        changelogType = "markdown"
 
-		minecraftVersionRange {
-			start = "26.3"
-			end = "26.3"
-		}
+        minecraftVersionRange {
+            start = "26.3"
+            end = "26.3"
+        }
 
-		client = true
-		server = true
-		requires("fabric-api")
-	}
+    }
 
-	modrinth {
+    modrinth {
+        displayName = "Grab Villager NeoForge ${project.mod_version}"
+        projectId = project.modrinth_id
+        accessToken = providers.environmentVariable("MODRINTH_TOKEN")
 
-		displayName = "${project.name} ${project.mod_version}"
-		projectId = project.modrinth_id
-		accessToken = providers.environmentVariable("MODRINTH_TOKEN")
-
-		minecraftVersionRange {
-			start = "26.3"
-			end = "26.3"
-		}
-
-		requires("fabric-api")
-	}
+        minecraftVersionRange {
+            start = "26.3"
+            end = "26.3"
+        }
+    }
 }

@@ -1,0 +1,18 @@
+modLoader="javafml"
+loaderVersion="[1,)"
+license="MIT"
+
+[[mods]]
+modId="grabvillager"
+version="${version}"
+displayName="Grab Villager"
+authors="Atom"
+description='''
+Allows players to pick up, carry, and throw villagers, zombie villagers, and wandering traders!
+'''
+
+[[mixins]]
+config="grabvillager.mixins.json"
+
+[[mixins]]
+config="grabvillager.client.mixins.json"
