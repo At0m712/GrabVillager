@@ -18,7 +18,7 @@ public class AvatarRendererMixin {
     @Inject(method = "extractRenderState(Lnet/minecraft/world/entity/Avatar;Lnet/minecraft/client/renderer/entity/state/AvatarRenderState;F)V", at = @At("TAIL"))
     private void grabvillager$onExtractAvatarRenderState(Avatar entity, AvatarRenderState state, float partialTick, CallbackInfo ci) {
         if (state instanceof IGrabVillagerState customState) {
-            boolean isCarrying = !entity.getPassengers().isEmpty() && entity.getFirstPassenger() instanceof Villager;
+            boolean isCarrying = !entity.getPassengers().isEmpty() && atom.grabvillager.logic.GrabVillagerLogic.isGrabbable(entity.getFirstPassenger());
             customState.grabvillager$setCarrying(isCarrying);
 
             boolean isLocal = (entity == Minecraft.getInstance().player);
