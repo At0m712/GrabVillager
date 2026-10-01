@@ -26,7 +26,7 @@ public class PlayerModelMixin {
         Player localPlayer = Minecraft.getInstance().player;
         if (localPlayer == null) return;
 
-        boolean isCarrying = !localPlayer.getPassengers().isEmpty() && localPlayer.getFirstPassenger() instanceof Villager;
+        boolean isCarrying = !localPlayer.getPassengers().isEmpty() && com.atom.grabvillager.logic.GrabVillagerLogic.isGrabbable(localPlayer.getFirstPassenger());
         int throwTicks = GrabVillagerClientLogic.throwAnimTicks;
         float chargeProgress = GrabVillagerClientLogic.getChargeProgress();
 

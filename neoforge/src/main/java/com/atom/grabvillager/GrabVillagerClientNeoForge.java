@@ -26,7 +26,7 @@ public class GrabVillagerClientNeoForge {
         GrabVillagerClientLogic.tick((isThrow, charge) -> {
             // NOUVEAU SYSTEME 1.21.4+ : On utilise directement la connexion native de Minecraft
             if (Minecraft.getInstance().getConnection() != null) {
-                Minecraft.getInstance().getConnection().send(new VillagerDropPayload(isThrow, charge));
+                Minecraft.getInstance().getConnection().send(new VillagerDropPayload(isThrow, charge, GrabVillagerConfig.throwMultiplier));
             }
         });
 

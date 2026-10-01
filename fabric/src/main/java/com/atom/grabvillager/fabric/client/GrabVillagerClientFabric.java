@@ -29,7 +29,7 @@ public class GrabVillagerClientFabric implements ClientModInitializer {
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             GrabVillagerClientLogic.tick((isThrow, charge) -> {
-                ClientPlayNetworking.send(new VillagerDropPayload(isThrow, charge));
+                ClientPlayNetworking.send(new VillagerDropPayload(isThrow, charge, GrabVillagerConfig.throwMultiplier));
             });
 
             // GESTION DU COMPTE À REBOURS
