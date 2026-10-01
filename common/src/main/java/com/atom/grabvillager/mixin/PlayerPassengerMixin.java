@@ -1,8 +1,9 @@
 package com.atom.grabvillager.mixin;
 
-import net.minecraft.client.Minecraft;
+import com.atom.grabvillager.config.GrabVillagerConfig;
+import com.atom.grabvillager.logic.GrabVillagerLogic;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.npc.Villager;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -14,15 +15,17 @@ public abstract class PlayerPassengerMixin {
 
     @Inject(method = "positionRider(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/entity/Entity$MoveFunction;)V", at = @At("HEAD"), cancellable = true)
     private void grabvillager$onPositionRider(Entity passenger, Entity.MoveFunction callback, CallbackInfo ci) {
-        if ((Object) this instanceof Player player && passenger instanceof Villager villager) {
+        if ((Object) this instanceof Player player && GrabVillagerLogic.isGrabbable(passenger)) {
 
-            boolean isLocal = player == Minecraft.getInstance().player;
-            float progress = (!com.atom.grabvillager.config.GrabVillagerConfig.allowTools) ? 1.0f : (isLocal ? com.atom.grabvillager.client.GrabVillagerClientLogic.getChargeProgress() : 0.0f);
+            boolean isLocal = player.level().isClientSide() && GrabVillagerLogic.clientPlayerId != null && player.getUUID().equals(GrabVillagerLogic.clientPlayerId);
+            float progress = (!GrabVillagerConfig.allowTools) ? 1.0f : (isLocal ? GrabVillagerLogic.clientChargeProgress : 0.0f);
 
-            villager.setYBodyRot(player.yBodyRot);
-            villager.yBodyRotO = player.yBodyRotO;
-            villager.setYHeadRot(player.yHeadRot);
-            villager.yHeadRotO = player.yHeadRotO;
+            if (passenger instanceof LivingEntity livingPassenger) {
+                livingPassenger.setYBodyRot(player.yBodyRot);
+                livingPassenger.yBodyRotO = player.yBodyRotO;
+                livingPassenger.setYHeadRot(player.yHeadRot);
+                livingPassenger.yHeadRotO = player.yHeadRotO;
+            }
 
             double backY = player.getY() + (player.getBbHeight() * 0.4);
 
@@ -30,7 +33,6 @@ public abstract class PlayerPassengerMixin {
                 backY -= 0.15;
             }
 
-            // On stabilise la racine au centre du joueur qui nage
             if (player.isVisuallySwimming()) {
                 backY = player.getY() + 0.7;
             }
@@ -38,7 +40,17 @@ public abstract class PlayerPassengerMixin {
             double headY = player.getY() + player.getBbHeight() + 0.4;
             double newY = backY + (headY - backY) * progress;
 
-            callback.accept(passenger, player.getX(), newY, player.getZ());
+            double offsetX = 0.0;
+            double offsetZ = 0.0;
+
+            if (passenger instanceof LivingEntity living && living.isBaby()) {
+                double backwardDistance = 0.4 * progress;
+                float bodyYawRad = player.yBodyRot * ((float) Math.PI / 180.0F);
+                offsetX = Math.sin(bodyYawRad) * backwardDistance;
+                offsetZ = -Math.cos(bodyYawRad) * backwardDistance;
+            }
+
+            callback.accept(passenger, player.getX() + offsetX, newY, player.getZ() + offsetZ);
             ci.cancel();
         }
     }

@@ -1,5 +1,6 @@
 package com.atom.grabvillager.mixin;
 
+import com.atom.grabvillager.config.GrabVillagerConfig;
 import com.atom.grabvillager.logic.GrabVillagerLogic;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.player.AbstractClientPlayer;
@@ -17,12 +18,12 @@ public class HideHandMixin {
 
     @Inject(method = "renderArmWithItem", at = @At("HEAD"), cancellable = true)
     private void grabvillager$hideHandWhenCarrying(AbstractClientPlayer player, float partialTicks, float pitch, InteractionHand hand, float swingProgress, ItemStack stack, float equipProgress, PoseStack poseStack, MultiBufferSource buffer, int combinedLight, CallbackInfo ci) {
-        if (player != null && GrabVillagerLogic.isCarryingVillager(player)) {
+        if (GrabVillagerConfig.allowTools) {
+            return;
+        }
 
-            // Si les outils sont bloqués dans la config OU qu'on commence à charger le lancer
-            if (!com.atom.grabvillager.config.GrabVillagerConfig.allowTools || com.atom.grabvillager.client.GrabVillagerClientLogic.getTicksHeld() > 0) {
-                ci.cancel();
-            }
+        if (player != null && player.getPassengers().stream().anyMatch(GrabVillagerLogic::isGrabbable)) {
+            ci.cancel();
         }
     }
 }
