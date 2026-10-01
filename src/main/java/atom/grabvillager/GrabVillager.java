@@ -32,7 +32,7 @@ public class GrabVillager implements ModInitializer {
         // 2. Enregistrement du récepteur avec PACKET_ID
         ServerPlayNetworking.registerGlobalReceiver(VillagerDropPayload.PACKET_ID, (payload, context) -> {
             context.server().execute(() -> {
-                GrabVillagerLogic.handleDropOrThrow(context.player(), payload.isThrow(), payload.charge());
+                GrabVillagerLogic.handleDropOrThrow(context.player(), payload.isThrow(), payload.charge(), payload.multiplier());
             });
         });
 
