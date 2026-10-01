@@ -6,9 +6,8 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.Identifier;
 
-public record VillagerDropPayload(boolean isThrow, float charge) implements CustomPacketPayload {
+public record VillagerDropPayload(boolean isThrow, float charge, float multiplier) implements CustomPacketPayload {
 
-    // Utilisation de la méthode de fabrication officielle de Mojang pour la 1.21
     public static final Type<VillagerDropPayload> TYPE = new Type<>(
             Identifier.fromNamespaceAndPath("grabvillager", "villager_drop")
     );
@@ -18,6 +17,8 @@ public record VillagerDropPayload(boolean isThrow, float charge) implements Cust
             VillagerDropPayload::isThrow,
             ByteBufCodecs.FLOAT,
             VillagerDropPayload::charge,
+            ByteBufCodecs.FLOAT,
+            VillagerDropPayload::multiplier,
             VillagerDropPayload::new
     );
 

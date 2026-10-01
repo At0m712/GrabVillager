@@ -1,10 +1,10 @@
 package com.atom.grabvillager.client;
 
+import com.atom.grabvillager.logic.GrabVillagerLogic;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import org.lwjgl.glfw.GLFW;
-import com.atom.grabvillager.config.GrabVillagerConfig;
 
 public class GrabVillagerClientLogic {
 
@@ -13,20 +13,25 @@ public class GrabVillagerClientLogic {
     public static int throwAnimTicks = 0;
 
     // Variables d'état
-    // chargeProgress reste STRICTEMENT entre 0.0f et 1.0f pour que ton interface graphique ne bug jamais
     private static float chargeProgress = 0.0f;
     private static int ticksHeld = 0;
     private static boolean wasDown = false;
 
-    // --- LES MÉTHODES POUR TON OVERLAY ---
     public static float getChargeProgress() {
         return chargeProgress;
+    }
+
+    public static void setChargeProgress(float progress) {
+        chargeProgress = progress;
     }
 
     public static int getTicksHeld() {
         return ticksHeld;
     }
-    // -------------------------------------
+
+    public static void setTicksHeld(int ticks) {
+        ticksHeld = ticks;
+    }
 
     public interface DropCallback {
         void execute(boolean isThrow, float charge);
@@ -40,8 +45,11 @@ public class GrabVillagerClientLogic {
         Minecraft client = Minecraft.getInstance();
         if (client.player == null) return;
 
-        // SÉCURITÉ ABSOLUE : On annule tout calcul si on ne porte personne.
-        if (client.player.getPassengers().isEmpty()) {
+        GrabVillagerLogic.clientPlayerId = client.player.getUUID();
+        GrabVillagerLogic.clientChargeProgress = chargeProgress;
+
+        boolean isCarrying = GrabVillagerLogic.isCarryingVillager(client.player);
+        if (!isCarrying) {
             ticksHeld = 0;
             chargeProgress = 0.0f;
             wasDown = false;
@@ -53,24 +61,19 @@ public class GrabVillagerClientLogic {
         if (isDown) {
             ticksHeld++;
             chargeProgress = Math.min(1.0f, ticksHeld / 20.0f);
-
         } else if (wasDown) {
             boolean isThrow = ticksHeld > 5;
-
-
-            float maxPowerFromConfig = GrabVillagerConfig.throwMultiplier;;
-
-            float finalCharge = isThrow ? (chargeProgress * maxPowerFromConfig) : 0.0f;
+            float finalCharge = isThrow ? chargeProgress : 0.0f;
 
             if (isThrow) {
                 throwAnimTicks = MAX_THROW_ANIM_TICKS;
             }
 
-            System.out.println("[CLIENT] Barre visuelle relâchée à : " + (int)(chargeProgress * 100) + "%. Puissance envoyée au serveur : " + finalCharge);
-
             callback.execute(isThrow, finalCharge);
 
-
+            ticksHeld = 0;
+            chargeProgress = 0.0f;
+        } else {
             ticksHeld = 0;
             chargeProgress = 0.0f;
         }
