@@ -20,7 +20,7 @@ public class PlayerRendererMixin {
         // On vérifie que notre state a bien reçu l'interface via Mixin
         if (state instanceof IGrabVillagerState customState) {
             boolean isLocal = player == Minecraft.getInstance().player;
-            boolean isCarrying = !player.getPassengers().isEmpty() && player.getFirstPassenger() instanceof Villager;
+            boolean isCarrying = !player.getPassengers().isEmpty() && com.atom.grabvillager.logic.GrabVillagerLogic.isGrabbable(player.getFirstPassenger());
 
             // On sauvegarde les informations dans le RenderState pour que le modèle puisse les lire plus tard
             customState.grabvillager$setLocal(isLocal);
