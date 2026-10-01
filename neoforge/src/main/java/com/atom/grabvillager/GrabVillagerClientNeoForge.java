@@ -25,7 +25,7 @@ public class GrabVillagerClientNeoForge {
 
     public static void onClientTick(ClientTickEvent.Post event) {
         GrabVillagerClientLogic.tick((isThrow, charge) -> {
-            PacketDistributor.sendToServer(new VillagerDropPayload(isThrow, charge));
+            PacketDistributor.sendToServer(new VillagerDropPayload(isThrow, charge, GrabVillagerConfig.throwMultiplier));
         });
 
         // NOUVEAU : On ouvre l'écran ici, une fois que le tchat est bien fermé
