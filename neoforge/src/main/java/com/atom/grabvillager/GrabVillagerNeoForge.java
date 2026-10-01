@@ -46,7 +46,8 @@ public class GrabVillagerNeoForge {
                         GrabVillagerLogic.handleDropOrThrow(
                                 (ServerPlayer) context.player(),
                                 payload.isThrow(),
-                                payload.charge()
+                                payload.charge(),
+                                payload.multiplier()
                         );
                     });
                 }
