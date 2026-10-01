@@ -5,11 +5,8 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.Identifier;
 
+public record VillagerDropPayload(boolean isThrow, float charge, float multiplier) implements CustomPacketPayload {
 
-// Note : L'utilisation d'un "record" génère automatiquement les méthodes .isThrow() et .charge()
-public record VillagerDropPayload(boolean isThrow, float charge) implements CustomPacketPayload {
-
-    // Utilisation de ResourceLocation (Mojang) au lieu de Identifier (Yarn)
     public static final CustomPacketPayload.Type<VillagerDropPayload> PACKET_ID =
             new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath("grabvillager", "villager_drop"));
 
@@ -17,8 +14,9 @@ public record VillagerDropPayload(boolean isThrow, float charge) implements Cust
             (buf, payload) -> {
                 buf.writeBoolean(payload.isThrow());
                 buf.writeFloat(payload.charge());
+                buf.writeFloat(payload.multiplier());
             },
-            buf -> new VillagerDropPayload(buf.readBoolean(), buf.readFloat())
+            buf -> new VillagerDropPayload(buf.readBoolean(), buf.readFloat(), buf.readFloat())
     );
 
     @Override

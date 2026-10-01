@@ -42,7 +42,7 @@ public class GrabVillagerClient implements ClientModInitializer {
         // 3. Événement des touches et logique client
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             GrabVillagerClientLogic.tick((isThrow, charge) -> {
-                ClientPlayNetworking.send(new VillagerDropPayload(isThrow, charge));
+                ClientPlayNetworking.send(new VillagerDropPayload(isThrow, charge, GrabVillagerConfig.throwMultiplier));
             });
 
             if (screenOpenDelay > 0) {

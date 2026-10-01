@@ -17,11 +17,19 @@ import net.minecraft.world.entity.monster.zombie.ZombieVillager;
 import net.minecraft.world.entity.npc.villager.Villager;
 import net.minecraft.world.entity.npc.wanderingtrader.WanderingTrader;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
+
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class GrabVillagerLogic {
     public static java.util.UUID clientPlayerId = null;
     public static float clientChargeProgress = 0.0f;
+
+    private static final Map<UUID, Long> LAST_ACTION_TIMES = new ConcurrentHashMap<>();
 
     public static final TagKey<EntityType<?>> GRABBABLE_TAG = TagKey.create(
             Registries.ENTITY_TYPE,
@@ -80,9 +88,30 @@ public class GrabVillagerLogic {
                 return InteractionResult.PASS;
             }
 
+            // Sécurités de base : spectateur, entité morte/supprimée ou portée excessive
+            if (player.isSpectator() || target.isRemoved() || !target.isAlive()) {
+                return InteractionResult.PASS;
+            }
+            if (player.distanceToSqr(target) > 25.0) { // Max 5 blocs
+                return InteractionResult.PASS;
+            }
+
+            // Protection anti-griefing & respect des claims (WorldGuard, FTB Chunks, etc.)
+            if (!player.level().mayInteract(player, target.blockPosition())) {
+                return InteractionResult.FAIL;
+            }
+            if (target.getVehicle() != null && !player.level().mayInteract(player, target.getVehicle().blockPosition())) {
+                return InteractionResult.FAIL;
+            }
+
             if (player.getPassengers().isEmpty()) {
                 if (!player.level().isClientSide() && target.getVehicle() != null) {
                     target.stopRiding();
+                }
+
+                // Extinction immédiate si le zombie villageois brûle au soleil
+                if (target.isOnFire()) {
+                    target.clearFire();
                 }
 
                 boolean success = target.startRiding(player, true, true);
@@ -103,9 +132,21 @@ public class GrabVillagerLogic {
     }
 
     public static void handleDropOrThrow(ServerPlayer player, boolean isThrow, float charge) {
+        handleDropOrThrow(player, isThrow, charge, GrabVillagerConfig.throwMultiplier);
+    }
+
+    public static void handleDropOrThrow(ServerPlayer player, boolean isThrow, float charge, float clientMultiplier) {
         if (!isCarryingVillager(player)) {
             return;
         }
+
+        // Anti-spam et rate-limiting des paquets (200ms de cooldown)
+        long now = System.currentTimeMillis();
+        Long lastTime = LAST_ACTION_TIMES.get(player.getUUID());
+        if (lastTime != null && now - lastTime < 200) {
+            return;
+        }
+        LAST_ACTION_TIMES.put(player.getUUID(), now);
 
         charge = Math.max(0.0f, Math.min(1.0f, charge));
 
@@ -117,16 +158,37 @@ public class GrabVillagerLogic {
         ClientboundSetPassengersPacket passPacket = new ClientboundSetPassengersPacket(player);
         player.level().getChunkSource().sendToTrackingPlayersAndSelf(player, passPacket);
 
-        double spawnX = player.getX() + (look.x * 0.5);
-        double spawnY = player.getY() + player.getEyeHeight() - 0.5;
-        double spawnZ = player.getZ() + (look.z * 0.5);
+        // Raycast anti-noclip : vérifie s'il y a un obstacle devant le joueur
+        Vec3 eyePos = player.getEyePosition();
+        Vec3 targetPos = eyePos.add(look.scale(0.8));
+        HitResult hit = player.level().clip(new ClipContext(eyePos, targetPos, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, player));
+        Vec3 dropPos;
+        if (hit.getType() != HitResult.Type.MISS) {
+            dropPos = hit.getLocation().subtract(look.scale(0.2));
+        } else {
+            dropPos = targetPos;
+        }
+
+        double spawnX = dropPos.x;
+        double spawnY = Math.max(player.getY(), dropPos.y - (passenger.getBbHeight() * 0.5));
+        double spawnZ = dropPos.z;
 
         passenger.setPos(spawnX, spawnY, spawnZ);
+
+        // Sécurité anti-suffocation : si la boîte de collision intersecte un mur, on dépose en sécurité sur le joueur
+        if (!player.level().noCollision(passenger, passenger.getBoundingBox())) {
+            passenger.setPos(player.getX(), player.getY(), player.getZ());
+        }
+
         passenger.setYRot(player.getYRot());
         passenger.setXRot(player.getXRot());
 
         if (isThrow) {
-            float multiplier = Math.max(0.1f, Math.min(3.0f, GrabVillagerConfig.throwMultiplier));
+            // Validation et synchronisation de la puissance choisie par le client, plafonnée par le serveur
+            float safeClientMult = Math.max(0.1f, Math.min(3.0f, clientMultiplier));
+            float serverCap = Math.max(0.1f, Math.min(3.0f, GrabVillagerConfig.throwMultiplier));
+            float multiplier = Math.min(safeClientMult, serverCap);
+
             float velocity = (0.5f + (charge * 1.2f)) * multiplier;
             Vec3 movement = new Vec3(look.x * velocity, (look.y * velocity) + 0.5D, look.z * velocity);
             passenger.setDeltaMovement(movement);
@@ -148,4 +210,4 @@ public class GrabVillagerLogic {
         ClientboundSetEntityMotionPacket motionPacket = new ClientboundSetEntityMotionPacket(passenger);
         player.level().getChunkSource().sendToTrackingPlayersAndSelf(passenger, motionPacket);
     }
-}
+}
