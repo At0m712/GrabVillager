@@ -7,7 +7,8 @@
     "EntityMixin",
     "PlayerPassengerMixin",
     "GhostVillagerMixin",
-    "VillagerFlightMixin"
+    "VillagerFlightMixin",
+    "ZombieSunMixin"
   ],
 
   "injectors": {
