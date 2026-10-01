@@ -22,7 +22,7 @@ public class GrabVillagerFabric implements ModInitializer {
         // Réception de la commande de Lancer côté Serveur
         ServerPlayNetworking.registerGlobalReceiver(VillagerDropPayload.TYPE, (payload, context) -> {
             context.server().execute(() -> {
-                GrabVillagerLogic.handleDropOrThrow(context.player(), payload.isThrow(), payload.charge());
+                GrabVillagerLogic.handleDropOrThrow(context.player(), payload.isThrow(), payload.charge(), payload.multiplier());
             });
         });
 

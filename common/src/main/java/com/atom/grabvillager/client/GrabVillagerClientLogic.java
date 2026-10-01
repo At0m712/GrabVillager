@@ -1,84 +1,90 @@
 package com.atom.grabvillager.client;
 
-import com.atom.grabvillager.config.GrabVillagerConfig;
 import com.atom.grabvillager.logic.GrabVillagerLogic;
+import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.npc.Villager;
-
-import java.util.function.BiConsumer;
+import org.lwjgl.glfw.GLFW;
 
 public class GrabVillagerClientLogic {
-    public static final KeyMapping DROP_KEY = new KeyMapping("key.grabvillager.drop", 85, "category.grabvillager.keys");
 
-    private static int ticksHeld = 0;
-
+    // Constantes pour l'animation
+    public static final int MAX_THROW_ANIM_TICKS = 10;
     public static int throwAnimTicks = 0;
-    public static final int MAX_THROW_ANIM_TICKS = 15;
-    // Tick précis où les bras fouettent en avant (1/3 de l'animation)
-    public static final int THROW_RELEASE_TICK = 10;
 
-    private static float pendingCharge = 0.0f;
-    private static boolean pendingIsThrow = false;
+    // Variables d'état
+    private static float chargeProgress = 0.0f;
+    private static int ticksHeld = 0;
+    private static boolean wasDown = false;
+
+    public static float getChargeProgress() {
+        return chargeProgress;
+    }
+
+    public static void setChargeProgress(float progress) {
+        chargeProgress = progress;
+    }
 
     public static int getTicksHeld() {
         return ticksHeld;
     }
 
-    public static float getChargeProgress() {
-        // Maintient le villageois en haut pendant l'anticipation du jet
-        if (throwAnimTicks > 0) return 1.0f;
-        return Math.min(ticksHeld / 10.0f, 1.0f);
+    public static void setTicksHeld(int ticks) {
+        ticksHeld = ticks;
     }
 
-    public static void tick(BiConsumer<Boolean, Float> sendPacketCallback) {
-        LocalPlayer player = Minecraft.getInstance().player;
+    public interface DropCallback {
+        void execute(boolean isThrow, float charge);
+    }
 
-        // Déroulement de l'animation
+    public static void tick(DropCallback callback) {
         if (throwAnimTicks > 0) {
             throwAnimTicks--;
-
-            // C'est LE moment : on lâche le villageois et on avertit le serveur !
-            if (throwAnimTicks == THROW_RELEASE_TICK) {
-                sendPacketCallback.accept(pendingIsThrow, pendingCharge);
-                if (player != null) {
-                    Entity passenger = player.getFirstPassenger();
-                    if (passenger instanceof Villager) {
-                        passenger.stopRiding();
-                    }
-                }
-            }
         }
 
-        if (player != null && GrabVillagerLogic.isCarryingVillager(player)) {
-            // On empêche de recharger un coup si une animation est en cours
-            if (throwAnimTicks == 0) {
-                if (DROP_KEY.isDown()) {
-                    ticksHeld++;
-                } else if (ticksHeld > 0) {
-                    boolean isThrow = ticksHeld >= 10;
-                    float charge = Math.min(ticksHeld / 20.0f, 1.0f) * GrabVillagerConfig.throwMultiplier;
+        Minecraft client = Minecraft.getInstance();
+        if (client.player == null) return;
 
-                    if (isThrow) {
-                        // On lance l'animation de jet (le villageois reste accroché pour le moment)
-                        throwAnimTicks = MAX_THROW_ANIM_TICKS;
-                        pendingCharge = charge;
-                        pendingIsThrow = true;
-                    } else {
-                        // C'est un drop classique, on le pose instantanément
-                        sendPacketCallback.accept(false, charge);
-                        Entity passenger = player.getFirstPassenger();
-                        if (passenger instanceof Villager) {
-                            passenger.stopRiding();
-                        }
-                    }
-                    ticksHeld = 0;
-                }
-            }
-        } else if (throwAnimTicks == 0) {
+        GrabVillagerLogic.clientPlayerId = client.player.getUUID();
+        GrabVillagerLogic.clientChargeProgress = chargeProgress;
+
+        boolean isCarrying = GrabVillagerLogic.isCarryingVillager(client.player);
+        if (!isCarrying) {
             ticksHeld = 0;
+            chargeProgress = 0.0f;
+            wasDown = false;
+            return;
         }
+
+        boolean isDown = DROP_KEY.isDown();
+
+        if (isDown) {
+            ticksHeld++;
+            chargeProgress = Math.min(1.0f, ticksHeld / 20.0f);
+        } else if (wasDown) {
+            boolean isThrow = ticksHeld > 5;
+            float finalCharge = isThrow ? chargeProgress : 0.0f;
+
+            if (isThrow) {
+                throwAnimTicks = MAX_THROW_ANIM_TICKS;
+            }
+
+            callback.execute(isThrow, finalCharge);
+
+            ticksHeld = 0;
+            chargeProgress = 0.0f;
+        } else {
+            ticksHeld = 0;
+            chargeProgress = 0.0f;
+        }
+
+        wasDown = isDown;
     }
+
+    public static final KeyMapping DROP_KEY = new KeyMapping(
+            "key.grabvillager.drop",
+            InputConstants.Type.KEYSYM,
+            GLFW.GLFW_KEY_G,
+            "category.grabvillager.keys"
+    );
 }

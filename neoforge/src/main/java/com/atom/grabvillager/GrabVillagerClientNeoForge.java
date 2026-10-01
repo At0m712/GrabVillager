@@ -22,7 +22,7 @@ public class GrabVillagerClientNeoForge {
 
     public static void onClientTick(ClientTickEvent.Post event) {
         GrabVillagerClientLogic.tick((isThrow, charge) -> {
-            PacketDistributor.sendToServer(new VillagerDropPayload(isThrow, charge));
+            PacketDistributor.sendToServer(new VillagerDropPayload(isThrow, charge, GrabVillagerConfig.throwMultiplier));
         });
     }
 
