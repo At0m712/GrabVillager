@@ -1,1 +1,9 @@
-Added French and English translations for the settings menu and keybinds.
+- Added grabbable datapack tag support (#grabvillager:grabbable)
+- Added flight particles (cloud, crit, happy villager/smoke)
+- Added Doppler audio effect and custom sounds (surprise, throwing, landing)
+- Added mid-air panic animation
+- Added anti-griefing protections (claim checks for FTB Chunks, WorldGuard, etc.)
+- Added anti-noclip raycast collision and anti-suffocation safeguards
+- Added complete fall damage immunity
+- Added sun protection for carried zombie villagers
+- Added throw multiplier synchronization between client and server
