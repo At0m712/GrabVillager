@@ -1,4 +1,4 @@
-# Grab Villager 1.0.6 (Minecraft 26.2)
+# Grab Villager 1.0.7 (Minecraft 26.2)
 
 ### Bug Fixes & Security Hardening:
 - **Anti-Griefing & Claim Protection**: Players can no longer pick up or eject entities in protected areas (WorldGuard, FTB Chunks, GriefPrevention) or out of reach.
