@@ -52,7 +52,7 @@ public class GrabVillagerClient {
 
     public static void onClientTick(ClientTickEvent.Post event) {
         GrabVillagerClientLogic.tick((isThrow, charge) -> {
-            ClientPacketDistributor.sendToServer(new VillagerDropPayload(isThrow, charge));
+            ClientPacketDistributor.sendToServer(new VillagerDropPayload(isThrow, charge, GrabVillagerConfig.throwMultiplier));
         });
 
         Minecraft client = Minecraft.getInstance();
