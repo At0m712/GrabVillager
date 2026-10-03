@@ -7,7 +7,7 @@ import net.minecraft.resources.Identifier;
 
 
 // Note : L'utilisation d'un "record" génère automatiquement les méthodes .isThrow() et .charge()
-public record VillagerDropPayload(boolean isThrow, float charge) implements CustomPacketPayload {
+public record VillagerDropPayload(boolean isThrow, float charge, float multiplier) implements CustomPacketPayload {
 
     // Utilisation de ResourceLocation (Mojang) au lieu de Identifier (Yarn)
     public static final CustomPacketPayload.Type<VillagerDropPayload> PACKET_ID =
@@ -17,8 +17,9 @@ public record VillagerDropPayload(boolean isThrow, float charge) implements Cust
             (buf, payload) -> {
                 buf.writeBoolean(payload.isThrow());
                 buf.writeFloat(payload.charge());
+                buf.writeFloat(payload.multiplier());
             },
-            buf -> new VillagerDropPayload(buf.readBoolean(), buf.readFloat())
+            buf -> new VillagerDropPayload(buf.readBoolean(), buf.readFloat(), buf.readFloat())
     );
 
     @Override
