@@ -47,7 +47,7 @@ public class GrabVillager {
                 VillagerDropPayload.PACKET_CODEC,
                 (payload, context) -> context.enqueueWork(() -> {
                     if (context.player() instanceof ServerPlayer serverPlayer) {
-                        GrabVillagerLogic.handleDropOrThrow(serverPlayer, payload.isThrow(), payload.charge());
+                        GrabVillagerLogic.handleDropOrThrow(serverPlayer, payload.isThrow(), payload.charge(), payload.multiplier());
                     }
                 })
         );
