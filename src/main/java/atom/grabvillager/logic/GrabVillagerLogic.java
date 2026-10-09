@@ -1,6 +1,7 @@
 package atom.grabvillager.logic;
 
 import atom.grabvillager.config.GrabVillagerConfig;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
 import net.minecraft.network.protocol.game.ClientboundSetPassengersPacket;
@@ -13,6 +14,8 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.animal.equine.Llama;
 import net.minecraft.world.entity.monster.zombie.ZombieVillager;
 import net.minecraft.world.entity.npc.villager.Villager;
 import net.minecraft.world.entity.npc.wanderingtrader.WanderingTrader;
@@ -31,6 +34,10 @@ public class GrabVillagerLogic {
 
     private static final Map<UUID, Long> LAST_ACTION_TIMES = new ConcurrentHashMap<>();
 
+    public static void onPlayerDisconnect(UUID uuid) {
+        LAST_ACTION_TIMES.remove(uuid);
+    }
+
     public static final TagKey<EntityType<?>> GRABBABLE_TAG = TagKey.create(
             Registries.ENTITY_TYPE,
             Identifier.fromNamespaceAndPath("grabvillager", "grabbable")
@@ -41,28 +48,32 @@ public class GrabVillagerLogic {
         try {
             if (entity.getType().builtInRegistryHolder().is(GRABBABLE_TAG)) return true;
         } catch (Exception ignored) {}
-        return entity instanceof Villager || entity instanceof WanderingTrader || entity instanceof ZombieVillager;
+        return entity instanceof Villager || entity instanceof WanderingTrader || entity instanceof ZombieVillager || entity instanceof Llama;
     }
 
     public static SoundEvent getSurpriseSound(Entity entity) {
+        if (entity instanceof Llama) return SoundEvents.LLAMA_AMBIENT;
         if (entity instanceof ZombieVillager) return SoundEvents.ZOMBIE_VILLAGER_AMBIENT;
         if (entity instanceof WanderingTrader) return SoundEvents.WANDERING_TRADER_NO;
         return SoundEvents.VILLAGER_NO;
     }
 
     public static SoundEvent getThrowSound(Entity entity) {
+        if (entity instanceof Llama) return SoundEvents.LLAMA_HURT;
         if (entity instanceof ZombieVillager) return SoundEvents.ZOMBIE_VILLAGER_HURT;
         if (entity instanceof WanderingTrader) return SoundEvents.WANDERING_TRADER_HURT;
         return SoundEvents.VILLAGER_NO;
     }
 
     public static SoundEvent getFlightSound(Entity entity) {
+        if (entity instanceof Llama) return SoundEvents.LLAMA_AMBIENT;
         if (entity instanceof ZombieVillager) return SoundEvents.ZOMBIE_VILLAGER_AMBIENT;
         if (entity instanceof WanderingTrader) return SoundEvents.WANDERING_TRADER_NO;
         return SoundEvents.VILLAGER_NO;
     }
 
     public static SoundEvent getLandingSound(Entity entity) {
+        if (entity instanceof Llama) return SoundEvents.LLAMA_AMBIENT;
         if (entity instanceof ZombieVillager) return SoundEvents.ZOMBIE_VILLAGER_AMBIENT;
         if (entity instanceof WanderingTrader) return SoundEvents.WANDERING_TRADER_YES;
         return SoundEvents.VILLAGER_YES;
@@ -112,6 +123,10 @@ public class GrabVillagerLogic {
                 // Extinction immédiate si le zombie villageois brûle au soleil
                 if (target.isOnFire()) {
                     target.clearFire();
+                }
+
+                if (target instanceof Mob mob) {
+                    mob.setTarget(null);
                 }
 
                 boolean success = target.startRiding(player, true, true);
@@ -169,6 +184,18 @@ public class GrabVillagerLogic {
             dropPos = targetPos;
         }
 
+        // Anti-griefing & respect des claims pour la dépose
+        BlockPos dropBlockPos = BlockPos.containing(dropPos);
+        if (!player.level().mayInteract(player, dropBlockPos)) {
+            passenger.setPos(player.getX(), player.getY(), player.getZ());
+            passenger.setDeltaMovement(Vec3.ZERO);
+            passenger.hurtMarked = true;
+            passenger.setOnGround(true);
+            ClientboundSetEntityMotionPacket motionPacket = new ClientboundSetEntityMotionPacket(passenger);
+            player.level().getChunkSource().sendToTrackingPlayersAndSelf(passenger, motionPacket);
+            return;
+        }
+
         double spawnX = dropPos.x;
         double spawnY = Math.max(player.getY(), dropPos.y - (passenger.getBbHeight() * 0.5));
         double spawnZ = dropPos.z;
@@ -190,17 +217,25 @@ public class GrabVillagerLogic {
             float multiplier = Math.min(safeClientMult, serverCap);
 
             float velocity = (0.5f + (charge * 1.2f)) * multiplier;
-            Vec3 movement = new Vec3(look.x * velocity, (look.y * velocity) + 0.5D, look.z * velocity);
-            passenger.setDeltaMovement(movement);
+            BlockPos throwTargetPos = BlockPos.containing(eyePos.add(look.scale(velocity * 3.0)));
 
-            if (passenger instanceof IThrownVillager thrownVillager) {
-                thrownVillager.grabvillager$setThrownTicks(100);
+            if (!player.level().mayInteract(player, throwTargetPos)) {
+                isThrow = false;
+            } else {
+                Vec3 movement = new Vec3(look.x * velocity, (look.y * velocity) + 0.5D, look.z * velocity);
+                passenger.setDeltaMovement(movement);
+
+                if (passenger instanceof IThrownVillager thrownVillager) {
+                    thrownVillager.grabvillager$setThrownTicks(100);
+                }
+
+                player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
+                        getThrowSound(passenger), passenger.getSoundSource(),
+                        1.0f, 1.2f + (charge * 0.3f));
             }
+        }
 
-            player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
-                    getThrowSound(passenger), passenger.getSoundSource(),
-                    1.0f, 1.2f + (charge * 0.3f));
-        } else {
+        if (!isThrow) {
             passenger.setDeltaMovement(Vec3.ZERO);
         }
 

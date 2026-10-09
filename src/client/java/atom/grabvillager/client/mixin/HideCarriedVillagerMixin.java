@@ -18,7 +18,9 @@ public class HideCarriedVillagerMixin {
     private void grabvillager$hideWhenCarried(Entity entity, Frustum frustum, double x, double y, double z, CallbackInfoReturnable<Boolean> cir) {
         if (GrabVillagerLogic.isGrabbable(entity) && entity.getVehicle() instanceof LocalPlayer) {
             if (Minecraft.getInstance().options.getCameraType().isFirstPerson()) {
-                cir.setReturnValue(false);
+                if (atom.grabvillager.client.GrabVillagerClientLogic.getChargeProgress() < 0.2f) {
+                    cir.setReturnValue(false);
+                }
             }
         }
     }
