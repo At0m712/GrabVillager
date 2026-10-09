@@ -22,6 +22,8 @@ public abstract class VillagerFlightMixin extends Entity implements IThrownVilla
 
     @Unique
     private int grabvillager$thrownTicks = 0;
+    @Unique
+    private int grabvillager$flightTotalTicks = 0;
 
     protected VillagerFlightMixin(EntityType<?> entityType, Level level) {
         super(entityType, level);
@@ -30,6 +32,7 @@ public abstract class VillagerFlightMixin extends Entity implements IThrownVilla
     @Override
     public void grabvillager$setThrownTicks(int ticks) {
         this.grabvillager$thrownTicks = ticks;
+        this.grabvillager$flightTotalTicks = 0;
     }
 
     @Override
@@ -49,6 +52,7 @@ public abstract class VillagerFlightMixin extends Entity implements IThrownVilla
     private void grabvillager$onFlightTick(CallbackInfo ci) {
         if (this.grabvillager$thrownTicks > 0) {
             this.grabvillager$thrownTicks--;
+            this.grabvillager$flightTotalTicks++;
 
             if (!this.level().isClientSide() && this.level() instanceof ServerLevel serverLevel) {
                 // Réinitialise la distance de chute continuellement pendant toute la durée du vol
@@ -75,8 +79,8 @@ public abstract class VillagerFlightMixin extends Entity implements IThrownVilla
                                 0.9f, dopplerPitch);
                     }
 
-                    // Si les 100 ticks sont écoulés mais que l'entité est toujours dans le vide (chute de falaise), on prolonge la protection
-                    if (this.grabvillager$thrownTicks == 0 && this.getY() > this.level().getMinY()) {
+                    // Si les 100 ticks sont écoulés mais que l'entité est toujours dans le vide (chute de falaise), on prolonge la protection (max 300 ticks / 15s)
+                    if (this.grabvillager$thrownTicks == 0 && this.getY() > this.level().getMinY() && this.grabvillager$flightTotalTicks < 300) {
                         this.grabvillager$thrownTicks = 1;
                     }
                 } else {
@@ -87,6 +91,7 @@ public abstract class VillagerFlightMixin extends Entity implements IThrownVilla
                             GrabVillagerLogic.getLandingSound(this), this.getSoundSource(),
                             1.0f, 1.1f);
                     this.grabvillager$thrownTicks = 0;
+                    this.grabvillager$flightTotalTicks = 0;
                 }
             }
         }

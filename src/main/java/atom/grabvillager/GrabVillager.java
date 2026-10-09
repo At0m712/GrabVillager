@@ -36,6 +36,11 @@ public class GrabVillager implements ModInitializer {
             });
         });
 
+        // Nettoyage de la mémoire à la déconnexion d'un joueur
+        net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
+            GrabVillagerLogic.onPlayerDisconnect(handler.getPlayer().getUUID());
+        });
+
         // 3. Interagir avec une Entité
         UseEntityCallback.EVENT.register((player, world, hand, entity, hitResult) -> {
             // EXCEPTION POUR LES ÉCHANGES / SOINS : On laisse toujours passer l'interaction avec un villageois/trader/zombie villageois
