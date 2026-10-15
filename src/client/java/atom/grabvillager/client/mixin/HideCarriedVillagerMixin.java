@@ -16,11 +16,10 @@ public class HideCarriedVillagerMixin {
 
     @Inject(method = "shouldRender", at = @At("HEAD"), cancellable = true)
     private void grabvillager$hideWhenCarried(Entity entity, Frustum frustum, double x, double y, double z, float partialTick, CallbackInfoReturnable<Boolean> cir) {
-        if (GrabVillagerLogic.isGrabbable(entity) && entity.getVehicle() instanceof LocalPlayer) {
-            if (Minecraft.getInstance().options.getCameraType().isFirstPerson()) {
-                if (atom.grabvillager.client.GrabVillagerClientLogic.getChargeProgress() < 0.2f) {
-                    cir.setReturnValue(false);
-                }
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.options.getCameraType().isFirstPerson() && mc.player != null) {
+            if (entity.getVehicle() == mc.player || mc.player.hasPassenger(entity) || (GrabVillagerLogic.isGrabbable(entity) && entity.getVehicle() instanceof LocalPlayer)) {
+                cir.setReturnValue(false);
             }
         }
     }
