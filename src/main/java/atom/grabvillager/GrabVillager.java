@@ -51,6 +51,14 @@ public class GrabVillager implements ModInitializer {
                 return GrabVillagerLogic.tryGrab(player, entity, hand);
             }
 
+            // Dépose ciblée dans les véhicules (Minecarts, Bateaux, etc.)
+            if (GrabVillagerLogic.isCarryingVillager(player)) {
+                InteractionResult vehicleResult = GrabVillagerLogic.tryPlaceInVehicle(player, entity, hand);
+                if (vehicleResult != InteractionResult.PASS) {
+                    return vehicleResult;
+                }
+            }
+
             // Pour les autres entités, on applique le blocage si nécessaire
             if (GrabVillagerLogic.shouldBlockActions(player)) return InteractionResult.FAIL;
             return InteractionResult.PASS;

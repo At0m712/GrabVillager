@@ -1,4 +1,5 @@
-# Grab Villager 1.0.10 (Minecraft 26.3)
+# Grab Villager 1.0.11 (Minecraft 26.3)
 
-### Changes:
-- **First-Person View Fix**: Carried villagers/entities are now completely hidden in first-person view under all circumstances (including while charging throws), preventing them from obstructing or ruining the player's view.
+### Nouvelles fonctionnalités :
+- **Dépose ciblée dans les Véhicules (Wagonnets & Bateaux)** : Faites un clic droit accroupi directement sur un Minecart ou un Bateau en portant un villageois pour l'installer directement à bord.
+- **Réaction festive pour les Bébés Villageois** : Les bébés adorent être lancés ! Ils émettent désormais des particules festives et de petits rires joyeux pendant leur vol.

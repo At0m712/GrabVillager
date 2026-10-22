@@ -14,12 +14,15 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.animal.equine.Llama;
 import net.minecraft.world.entity.monster.zombie.ZombieVillager;
 import net.minecraft.world.entity.npc.villager.Villager;
 import net.minecraft.world.entity.npc.wanderingtrader.WanderingTrader;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.vehicle.boat.AbstractBoat;
+import net.minecraft.world.entity.vehicle.minecart.AbstractMinecart;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
@@ -52,6 +55,9 @@ public class GrabVillagerLogic {
     }
 
     public static SoundEvent getSurpriseSound(Entity entity) {
+        if (entity instanceof LivingEntity living && living.isBaby() && (entity instanceof Villager || entity instanceof ZombieVillager)) {
+            return SoundEvents.VILLAGER_CELEBRATE;
+        }
         if (entity instanceof Llama) return SoundEvents.LLAMA_AMBIENT;
         if (entity instanceof ZombieVillager) return SoundEvents.ZOMBIE_VILLAGER_AMBIENT;
         if (entity instanceof WanderingTrader) return SoundEvents.WANDERING_TRADER_NO;
@@ -59,6 +65,9 @@ public class GrabVillagerLogic {
     }
 
     public static SoundEvent getThrowSound(Entity entity) {
+        if (entity instanceof LivingEntity living && living.isBaby() && (entity instanceof Villager || entity instanceof ZombieVillager)) {
+            return SoundEvents.VILLAGER_CELEBRATE;
+        }
         if (entity instanceof Llama) return SoundEvents.LLAMA_HURT;
         if (entity instanceof ZombieVillager) return SoundEvents.ZOMBIE_VILLAGER_HURT;
         if (entity instanceof WanderingTrader) return SoundEvents.WANDERING_TRADER_HURT;
@@ -66,6 +75,9 @@ public class GrabVillagerLogic {
     }
 
     public static SoundEvent getFlightSound(Entity entity) {
+        if (entity instanceof LivingEntity living && living.isBaby() && (entity instanceof Villager || entity instanceof ZombieVillager)) {
+            return SoundEvents.VILLAGER_CELEBRATE;
+        }
         if (entity instanceof Llama) return SoundEvents.LLAMA_AMBIENT;
         if (entity instanceof ZombieVillager) return SoundEvents.ZOMBIE_VILLAGER_AMBIENT;
         if (entity instanceof WanderingTrader) return SoundEvents.WANDERING_TRADER_NO;
@@ -73,6 +85,9 @@ public class GrabVillagerLogic {
     }
 
     public static SoundEvent getLandingSound(Entity entity) {
+        if (entity instanceof LivingEntity living && living.isBaby() && (entity instanceof Villager || entity instanceof ZombieVillager)) {
+            return SoundEvents.VILLAGER_YES;
+        }
         if (entity instanceof Llama) return SoundEvents.LLAMA_AMBIENT;
         if (entity instanceof ZombieVillager) return SoundEvents.ZOMBIE_VILLAGER_AMBIENT;
         if (entity instanceof WanderingTrader) return SoundEvents.WANDERING_TRADER_YES;
@@ -135,15 +150,67 @@ public class GrabVillagerLogic {
                     ClientboundSetPassengersPacket packet = new ClientboundSetPassengersPacket(player);
                     serverPlayer.level().getChunkSource().sendToTrackingPlayersAndSelf(player, packet);
 
-                    // Son de surprise à l'attrapage : Un petit "Huuuuh ?" surpris et aigu dès qu'on le soulève.
+                    // Son de surprise à l'attrapage : Un petit "Huuuuh ?" surpris (ou rire festif pour bébé) dès qu'on le soulève.
+                    float surprisePitch = (target instanceof LivingEntity living && living.isBaby()) ? 1.6f : 1.45f;
                     serverPlayer.level().playSound(null, target.getX(), target.getY(), target.getZ(),
-                            getSurpriseSound(target), target.getSoundSource(), 1.0f, 1.45f);
+                            getSurpriseSound(target), target.getSoundSource(), 1.0f, surprisePitch);
                 }
 
                 return success ? InteractionResult.SUCCESS : InteractionResult.PASS;
             }
         }
         return InteractionResult.PASS;
+    }
+
+    public static InteractionResult tryPlaceInVehicle(Player player, Entity vehicle, InteractionHand hand) {
+        if (hand != InteractionHand.MAIN_HAND) {
+            return InteractionResult.PASS;
+        }
+        if (!isCarryingVillager(player)) {
+            return InteractionResult.PASS;
+        }
+        if (!player.isCrouching() && !player.isShiftKeyDown()) {
+            return InteractionResult.PASS;
+        }
+        if (!(vehicle instanceof AbstractBoat) && !(vehicle instanceof AbstractMinecart)) {
+            return InteractionResult.PASS;
+        }
+
+        // Anti-griefing & respect des claims
+        if (!player.level().mayInteract(player, vehicle.blockPosition())) {
+            return InteractionResult.FAIL;
+        }
+
+        Entity passenger = player.getFirstPassenger();
+        if (passenger == null) {
+            return InteractionResult.PASS;
+        }
+
+        if (player.level().isClientSide()) {
+            return InteractionResult.SUCCESS;
+        }
+
+        passenger.stopRiding();
+        boolean success = passenger.startRiding(vehicle, false, true);
+
+        if (success) {
+            if (player instanceof ServerPlayer serverPlayer) {
+                ClientboundSetPassengersPacket playerPacket = new ClientboundSetPassengersPacket(player);
+                serverPlayer.level().getChunkSource().sendToTrackingPlayersAndSelf(player, playerPacket);
+
+                ClientboundSetPassengersPacket vehiclePacket = new ClientboundSetPassengersPacket(vehicle);
+                serverPlayer.level().getChunkSource().sendToTrackingPlayersAndSelf(vehicle, vehiclePacket);
+
+                float pitch = (passenger instanceof LivingEntity living && living.isBaby()) ? 1.65f : 1.0f;
+                serverPlayer.level().playSound(null, vehicle.getX(), vehicle.getY(), vehicle.getZ(),
+                        getLandingSound(passenger), passenger.getSoundSource(), 1.0f, pitch);
+            }
+            return InteractionResult.SUCCESS;
+        } else {
+            // Remet le passager sur le joueur si le véhicule est plein
+            passenger.startRiding(player, true, true);
+            return InteractionResult.FAIL;
+        }
     }
 
     public static void handleDropOrThrow(ServerPlayer player, boolean isThrow, float charge) {
@@ -229,9 +296,10 @@ public class GrabVillagerLogic {
                     thrownVillager.grabvillager$setThrownTicks(100);
                 }
 
+                float throwPitch = (passenger instanceof LivingEntity living && living.isBaby()) ? 1.5f + (charge * 0.3f) : 1.2f + (charge * 0.3f);
                 player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
                         getThrowSound(passenger), passenger.getSoundSource(),
-                        1.0f, 1.2f + (charge * 0.3f));
+                        1.0f, throwPitch);
             }
         }
 

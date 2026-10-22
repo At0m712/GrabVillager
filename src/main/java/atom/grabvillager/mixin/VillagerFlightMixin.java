@@ -58,11 +58,20 @@ public abstract class VillagerFlightMixin extends Entity implements IThrownVilla
                 // Réinitialise la distance de chute continuellement pendant toute la durée du vol
                 this.resetFallDistance();
 
+                boolean isBaby = (Object) this instanceof LivingEntity living && living.isBaby();
+
                 if (!this.onGround() && !this.isInWater() && !this.isInLava() && this.getVehicle() == null) {
                     // Traînée de particules de vol
                     serverLevel.sendParticles(ParticleTypes.CLOUD, this.getX(), this.getY() + 0.4, this.getZ(), 2, 0.08, 0.08, 0.08, 0.01);
                     serverLevel.sendParticles(ParticleTypes.CRIT, this.getX(), this.getY() + 0.5, this.getZ(), 1, 0.08, 0.08, 0.08, 0.04);
-                    if (this.random.nextFloat() < 0.25f) {
+
+                    if (isBaby) {
+                        // Particules festives pour les bébés villageois ravis de voler
+                        serverLevel.sendParticles(ParticleTypes.HAPPY_VILLAGER, this.getX(), this.getY() + 0.4, this.getZ(), 2, 0.12, 0.12, 0.12, 0.02);
+                        if (this.random.nextFloat() < 0.35f) {
+                            serverLevel.sendParticles(ParticleTypes.HEART, this.getX(), this.getY() + 0.5, this.getZ(), 1, 0.08, 0.08, 0.08, 0.01);
+                        }
+                    } else if (this.random.nextFloat() < 0.25f) {
                         if ((Object) this instanceof ZombieVillager) {
                             serverLevel.sendParticles(ParticleTypes.SMOKE, this.getX(), this.getY() + 0.6, this.getZ(), 1, 0.05, 0.05, 0.05, 0.02);
                         } else {
@@ -70,13 +79,20 @@ public abstract class VillagerFlightMixin extends Entity implements IThrownVilla
                         }
                     }
 
-                    // 🔊 Cri avec effet Doppler pendant le vol
+                    // 🔊 Cri avec effet Doppler ou rires festifs pour les bébés
                     if (this.grabvillager$thrownTicks % 8 == 0) {
-                        float progress = Math.min(1.0f, (100 - this.grabvillager$thrownTicks) / 75.0f);
-                        float dopplerPitch = Math.max(0.55f, 1.4f - (progress * 0.8f));
-                        serverLevel.playSound(null, this.getX(), this.getY(), this.getZ(),
-                                GrabVillagerLogic.getFlightSound(this), this.getSoundSource(),
-                                0.9f, dopplerPitch);
+                        if (isBaby) {
+                            // Petit rire joyeux pendant le vol
+                            serverLevel.playSound(null, this.getX(), this.getY(), this.getZ(),
+                                    GrabVillagerLogic.getFlightSound(this), this.getSoundSource(),
+                                    0.9f, 1.5f + (this.random.nextFloat() * 0.3f));
+                        } else {
+                            float progress = Math.min(1.0f, (100 - this.grabvillager$thrownTicks) / 75.0f);
+                            float dopplerPitch = Math.max(0.55f, 1.4f - (progress * 0.8f));
+                            serverLevel.playSound(null, this.getX(), this.getY(), this.getZ(),
+                                    GrabVillagerLogic.getFlightSound(this), this.getSoundSource(),
+                                    0.9f, dopplerPitch);
+                        }
                     }
 
                     // Si les 100 ticks sont écoulés mais que l'entité est toujours dans le vide (chute de falaise), on prolonge la protection (max 300 ticks / 15s)
@@ -87,9 +103,13 @@ public abstract class VillagerFlightMixin extends Entity implements IThrownVilla
                     // Atterrissage en douceur
                     this.resetFallDistance();
                     serverLevel.sendParticles(ParticleTypes.POOF, this.getX(), this.getY() + 0.2, this.getZ(), 6, 0.2, 0.05, 0.2, 0.03);
+                    if (isBaby) {
+                        serverLevel.sendParticles(ParticleTypes.HAPPY_VILLAGER, this.getX(), this.getY() + 0.3, this.getZ(), 6, 0.15, 0.15, 0.15, 0.02);
+                    }
+                    float landPitch = isBaby ? 1.6f : 1.1f;
                     serverLevel.playSound(null, this.getX(), this.getY(), this.getZ(),
                             GrabVillagerLogic.getLandingSound(this), this.getSoundSource(),
-                            1.0f, 1.1f);
+                            1.0f, landPitch);
                     this.grabvillager$thrownTicks = 0;
                     this.grabvillager$flightTotalTicks = 0;
                 }
