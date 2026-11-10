@@ -294,6 +294,7 @@ public class GrabVillagerLogic {
 
                 if (passenger instanceof IThrownVillager thrownVillager) {
                     thrownVillager.grabvillager$setThrownTicks(100);
+                    thrownVillager.grabvillager$setThrower(player.getUUID());
                 }
 
                 float throwPitch = (passenger instanceof LivingEntity living && living.isBaby()) ? 1.5f + (charge * 0.3f) : 1.2f + (charge * 0.3f);

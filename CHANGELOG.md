@@ -1,5 +1,6 @@
-# Grab Villager 1.0.11 (Minecraft 26.3)
+# Grab Villager 1.0.12 (Minecraft 26.3)
 
 ### Nouvelles fonctionnalités :
-- **Dépose ciblée dans les Véhicules (Wagonnets & Bateaux)** : Faites un clic droit accroupi directement sur un Minecart ou un Bateau en portant un villageois pour l'installer directement à bord.
-- **Réaction festive pour les Bébés Villageois** : Les bébés adorent être lancés ! Ils émettent désormais des particules festives et de petits rires joyeux pendant leur vol.
+- **Prévisualisation de trajectoire (Trajectory Preview)** : Pendant la charge du lancer, une trajectoire parabolique en pointillés et un marqueur d'impact s'affichent pour viser avec précision vos trading boxes.
+- **Passe à un autre joueur (Catch Mechanic)** : En multijoueur, lancez un villageois vers un ami aux mains vides pour qu'il l'attrape directement au vol !
+- **Amorti sur blocs mous (Soft Landing & Bounce)** : Si le villageois atterrit sur une botte de foin, un lit, de l'eau, de la boue ou du slime, aucun dégât de chute et un rebond amusant avec effets sonores dédiés.
