@@ -49,7 +49,13 @@ public class GrabVillagerLogic {
     public static boolean isGrabbable(Entity entity) {
         if (entity == null) return false;
         try {
-            if (entity.getType().builtInRegistryHolder().is(GRABBABLE_TAG)) return true;
+            var registryOpt = entity.level().registryAccess().lookup(Registries.ENTITY_TYPE);
+            if (registryOpt.isPresent()) {
+                var tagOpt = registryOpt.get().get(GRABBABLE_TAG);
+                if (tagOpt.isPresent()) {
+                    return entity.getType().builtInRegistryHolder().is(GRABBABLE_TAG);
+                }
+            }
         } catch (Exception ignored) {}
         return entity instanceof Villager || entity instanceof WanderingTrader || entity instanceof ZombieVillager || entity instanceof Llama;
     }
@@ -99,7 +105,7 @@ public class GrabVillagerLogic {
     }
 
     public static boolean shouldBlockActions(Player player) {
-        return isCarryingVillager(player) && !GrabVillagerConfig.allowTools;
+        return isCarryingVillager(player) && !GrabVillagerConfig.getEffectiveAllowTools();
     }
 
     public static boolean isOwnPassenger(Player player, Entity target) {
@@ -109,20 +115,23 @@ public class GrabVillagerLogic {
     public static InteractionResult tryGrab(Player player, Entity target, InteractionHand hand) {
         if (hand == InteractionHand.MAIN_HAND && isGrabbable(target)) {
 
-            // S'accroupir (Shift) est obligatoire pour attraper, sinon on laisse passer l'interaction (commerce)
+            // Shift is required to pick up, otherwise allow normal interaction (trading)
             if (!player.isCrouching() && !player.isShiftKeyDown()) {
                 return InteractionResult.PASS;
             }
 
-            // Sécurités de base : spectateur, entité morte/supprimée ou portée excessive
-            if (player.isSpectator() || target.isRemoved() || !target.isAlive()) {
+            // Basic safety checks: spectator, sleeping/flying/riding, dead/removed target, or out of range
+            if (player.isSpectator() || player.isSleeping() || player.isFallFlying() || player.getVehicle() != null) {
                 return InteractionResult.PASS;
             }
-            if (player.distanceToSqr(target) > 25.0) { // Max 5 blocs
+            if (target.isRemoved() || !target.isAlive()) {
+                return InteractionResult.PASS;
+            }
+            if (player.distanceToSqr(target) > 25.0) { // Max 5 blocks
                 return InteractionResult.PASS;
             }
 
-            // Protection anti-griefing & respect des claims (WorldGuard, FTB Chunks, etc.)
+            // Anti-griefing & claim protection
             if (!player.level().mayInteract(player, target.blockPosition())) {
                 return InteractionResult.FAIL;
             }
@@ -135,7 +144,7 @@ public class GrabVillagerLogic {
                     target.stopRiding();
                 }
 
-                // Extinction immédiate si le zombie villageois brûle au soleil
+                // Extinguish burning zombie villagers immediately
                 if (target.isOnFire()) {
                     target.clearFire();
                 }
@@ -150,7 +159,6 @@ public class GrabVillagerLogic {
                     ClientboundSetPassengersPacket packet = new ClientboundSetPassengersPacket(player);
                     serverPlayer.level().getChunkSource().sendToTrackingPlayersAndSelf(player, packet);
 
-                    // Son de surprise à l'attrapage : Un petit "Huuuuh ?" surpris (ou rire festif pour bébé) dès qu'on le soulève.
                     float surprisePitch = (target instanceof LivingEntity living && living.isBaby()) ? 1.6f : 1.45f;
                     serverPlayer.level().playSound(null, target.getX(), target.getY(), target.getZ(),
                             getSurpriseSound(target), target.getSoundSource(), 1.0f, surprisePitch);
@@ -175,14 +183,22 @@ public class GrabVillagerLogic {
         if (!(vehicle instanceof AbstractBoat) && !(vehicle instanceof AbstractMinecart)) {
             return InteractionResult.PASS;
         }
+        if (vehicle.isRemoved() || !vehicle.isAlive() || player.distanceToSqr(vehicle) > 25.0) {
+            return InteractionResult.PASS;
+        }
 
-        // Anti-griefing & respect des claims
+        // Anti-griefing & claim protection
         if (!player.level().mayInteract(player, vehicle.blockPosition())) {
             return InteractionResult.FAIL;
         }
 
         Entity passenger = player.getFirstPassenger();
         if (passenger == null) {
+            return InteractionResult.PASS;
+        }
+
+        // Verify the vehicle can accept this passenger BEFORE dismounting (prevents glitches on ChestMinecart / full Boat)
+        if (vehicle instanceof IEntityPassengerCheck check && !check.grabvillager$canAcceptPassenger(passenger)) {
             return InteractionResult.PASS;
         }
 
@@ -208,8 +224,12 @@ public class GrabVillagerLogic {
             }
             return InteractionResult.SUCCESS;
         } else {
-            // Remet le passager sur le joueur si le véhicule est plein
+            // Re-mount passenger onto player and re-sync packet if vehicle unexpectedly rejected
             passenger.startRiding(player, true, true);
+            if (player instanceof ServerPlayer serverPlayer) {
+                ClientboundSetPassengersPacket playerPacket = new ClientboundSetPassengersPacket(player);
+                serverPlayer.level().getChunkSource().sendToTrackingPlayersAndSelf(player, playerPacket);
+            }
             return InteractionResult.FAIL;
         }
     }
@@ -223,7 +243,7 @@ public class GrabVillagerLogic {
             return;
         }
 
-        // Anti-spam et rate-limiting des paquets (200ms de cooldown)
+        // Rate-limiting (200ms cooldown)
         long now = System.currentTimeMillis();
         Long lastTime = LAST_ACTION_TIMES.get(player.getUUID());
         if (lastTime != null && now - lastTime < 200) {
@@ -241,7 +261,7 @@ public class GrabVillagerLogic {
         ClientboundSetPassengersPacket passPacket = new ClientboundSetPassengersPacket(player);
         player.level().getChunkSource().sendToTrackingPlayersAndSelf(player, passPacket);
 
-        // Raycast anti-noclip : vérifie s'il y a un obstacle devant le joueur
+        // Anti-noclip raycast
         Vec3 eyePos = player.getEyePosition();
         Vec3 targetPos = eyePos.add(look.scale(0.8));
         HitResult hit = player.level().clip(new ClipContext(eyePos, targetPos, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, player));
@@ -252,7 +272,7 @@ public class GrabVillagerLogic {
             dropPos = targetPos;
         }
 
-        // Anti-griefing & respect des claims pour la dépose
+        // Claim protection for drop position
         BlockPos dropBlockPos = BlockPos.containing(dropPos);
         if (!player.level().mayInteract(player, dropBlockPos)) {
             passenger.setPos(player.getX(), player.getY(), player.getZ());
@@ -270,7 +290,7 @@ public class GrabVillagerLogic {
 
         passenger.setPos(spawnX, spawnY, spawnZ);
 
-        // Sécurité anti-suffocation : si la boîte de collision intersecte un mur, on dépose en sécurité sur le joueur
+        // Anti-suffocation check
         if (!player.level().noCollision(passenger, passenger.getBoundingBox())) {
             passenger.setPos(player.getX(), player.getY(), player.getZ());
         }
@@ -279,7 +299,6 @@ public class GrabVillagerLogic {
         passenger.setXRot(player.getXRot());
 
         if (isThrow) {
-            // Validation et synchronisation de la puissance choisie par le client, plafonnée par le serveur
             float safeClientMult = Math.max(0.1f, Math.min(3.0f, clientMultiplier));
             float serverCap = Math.max(0.1f, Math.min(3.0f, GrabVillagerConfig.throwMultiplier));
             float multiplier = Math.min(safeClientMult, serverCap);

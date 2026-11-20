@@ -18,35 +18,62 @@ public class GrabVillagerConfig {
     public static int barOffsetY = 0;
     public static boolean barVertical = false;
 
+    private static volatile boolean hasServerSync = false;
+    private static volatile float serverThrowMultiplier = 3.0f;
+    private static volatile boolean serverAllowTools = false;
+
     private static final File FILE = Paths.get("config", "grabvillager.json").toFile();
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+
+    public static void applyServerSync(float maxThrowMultiplier, boolean allowToolsOnServer) {
+        serverThrowMultiplier = Math.max(0.1f, Math.min(3.0f, maxThrowMultiplier));
+        serverAllowTools = allowToolsOnServer;
+        hasServerSync = true;
+    }
+
+    public static void clearServerSync() {
+        hasServerSync = false;
+    }
+
+    public static float getEffectiveThrowMultiplier() {
+        float local = Math.max(0.1f, Math.min(3.0f, throwMultiplier));
+        return hasServerSync ? Math.min(local, serverThrowMultiplier) : local;
+    }
+
+    public static boolean getEffectiveAllowTools() {
+        return hasServerSync ? serverAllowTools : allowTools;
+    }
 
     public static void load() {
         try {
             if (FILE.exists()) {
-                FileReader reader = new FileReader(FILE);
-                JsonObject json = GSON.fromJson(reader, JsonObject.class);
-                if (json.has("throwMultiplier")) throwMultiplier = json.get("throwMultiplier").getAsFloat();
-                if (json.has("allowTools")) allowTools = json.get("allowTools").getAsBoolean();
-                if (json.has("barColorIndex")) barColorIndex = json.get("barColorIndex").getAsInt();
-                if (json.has("barSize")) barSize = json.get("barSize").getAsFloat();
-                if (json.has("barOffsetX")) barOffsetX = json.get("barOffsetX").getAsInt();
-                if (json.has("barOffsetY")) barOffsetY = json.get("barOffsetY").getAsInt();
-                if (json.has("barVertical")) barVertical = json.get("barVertical").getAsBoolean();
-                reader.close();
+                try (FileReader reader = new FileReader(FILE)) {
+                    JsonObject json = GSON.fromJson(reader, JsonObject.class);
+                    if (json != null) {
+                        if (json.has("throwMultiplier")) throwMultiplier = json.get("throwMultiplier").getAsFloat();
+                        if (json.has("allowTools")) allowTools = json.get("allowTools").getAsBoolean();
+                        if (json.has("barColorIndex")) barColorIndex = json.get("barColorIndex").getAsInt();
+                        if (json.has("barSize")) barSize = json.get("barSize").getAsFloat();
+                        if (json.has("barOffsetX")) barOffsetX = json.get("barOffsetX").getAsInt();
+                        if (json.has("barOffsetY")) barOffsetY = json.get("barOffsetY").getAsInt();
+                        if (json.has("barVertical")) barVertical = json.get("barVertical").getAsBoolean();
+                    }
+                }
 
-                // Sécurités mathématiques
-                throwMultiplier = Math.max(0.1f, Math.min(3.0f, throwMultiplier));
-                barSize = Math.max(0.1f, Math.min(1.0f, barSize));
+                // Math bounds & rounding
+                throwMultiplier = Math.round(Math.max(0.1f, Math.min(3.0f, throwMultiplier)) * 10.0f) / 10.0f;
+                barSize = Math.round(Math.max(0.1f, Math.min(1.0f, barSize)) * 10.0f) / 10.0f;
+                barColorIndex = Math.floorMod(barColorIndex, 4);
             }
         } catch (Exception ignored) {}
     }
 
     public static void save() {
         try {
-            // Sécurités avant sauvegarde
-            throwMultiplier = Math.max(0.1f, Math.min(3.0f, throwMultiplier));
-            barSize = Math.max(0.1f, Math.min(1.0f, barSize));
+            // Math bounds & rounding before save
+            throwMultiplier = Math.round(Math.max(0.1f, Math.min(3.0f, throwMultiplier)) * 10.0f) / 10.0f;
+            barSize = Math.round(Math.max(0.1f, Math.min(1.0f, barSize)) * 10.0f) / 10.0f;
+            barColorIndex = Math.floorMod(barColorIndex, 4);
 
             FILE.getParentFile().mkdirs();
             JsonObject json = new JsonObject();
@@ -57,9 +84,9 @@ public class GrabVillagerConfig {
             json.addProperty("barOffsetX", barOffsetX);
             json.addProperty("barOffsetY", barOffsetY);
             json.addProperty("barVertical", barVertical);
-            FileWriter writer = new FileWriter(FILE);
-            GSON.toJson(json, writer);
-            writer.close();
+            try (FileWriter writer = new FileWriter(FILE)) {
+                GSON.toJson(json, writer);
+            }
         } catch (Exception ignored) {}
     }
 }
