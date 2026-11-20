@@ -1,27 +1,25 @@
 package atom.grabvillager.client;
 
 import atom.grabvillager.config.GrabVillagerConfig;
+import atom.grabvillager.network.ConfigSyncPayload;
 import atom.grabvillager.network.VillagerDropPayload;
-import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.fabric.api.client.command.v2.ClientCommands;
-import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-
-import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
-import net.minecraft.client.KeyMapping;
-import net.minecraft.client.gui.screens.Screen; // L'import magique pour les écrans !
 import com.mojang.blaze3d.platform.InputConstants;
-import net.minecraft.resources.Identifier;
-
+import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
+import net.fabricmc.fabric.api.client.command.v2.ClientCommands;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
+import net.minecraft.client.KeyMapping;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
 
 public class GrabVillagerClient implements ClientModInitializer {
 
     private static int screenOpenDelay = 0;
 
-    // 1. Déclarer la catégorie et la touche AU NIVEAU DE LA CLASSE (en dehors des méthodes)
     public static final KeyMapping.Category GRAB_CATEGORY = KeyMapping.Category.register(
             Identifier.fromNamespaceAndPath("grabvillager", "main")
     );
@@ -32,14 +30,25 @@ public class GrabVillagerClient implements ClientModInitializer {
     public void onInitializeClient() {
         GrabVillagerConfig.load();
 
-        // 2. Enregistrer la touche directement ici au lancement du client
         dropKey = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 "key.grabvillager.drop",
                 InputConstants.KEY_G,
                 GRAB_CATEGORY
         ));
 
-        // 3. Événement des touches et logique client
+        // Receive server config sync on dedicated multiplayer servers
+        ClientPlayNetworking.registerGlobalReceiver(ConfigSyncPayload.PACKET_ID, (payload, context) -> {
+            context.client().execute(() -> {
+                if (!context.client().isLocalServer()) {
+                    GrabVillagerConfig.applyServerSync(payload.throwMultiplier(), payload.allowTools());
+                }
+            });
+        });
+
+        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
+            GrabVillagerConfig.clearServerSync();
+        });
+
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             GrabVillagerClientLogic.tick((isThrow, charge) -> {
                 ClientPlayNetworking.send(new VillagerDropPayload(isThrow, charge, GrabVillagerConfig.throwMultiplier));
@@ -60,7 +69,6 @@ public class GrabVillagerClient implements ClientModInitializer {
                 }
         );
 
-        // 5. Commandes de configuration
         ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> {
             dispatcher.register(ClientCommands.literal("grabvillager")
                     .executes(context -> {

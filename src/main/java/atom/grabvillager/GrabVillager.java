@@ -1,6 +1,8 @@
 package atom.grabvillager;
 
+import atom.grabvillager.config.GrabVillagerConfig;
 import atom.grabvillager.logic.GrabVillagerLogic;
+import atom.grabvillager.network.ConfigSyncPayload;
 import atom.grabvillager.network.VillagerDropPayload;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.player.AttackBlockCallback;
@@ -9,9 +11,9 @@ import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.fabricmc.fabric.api.event.player.UseEntityCallback;
 import net.fabricmc.fabric.api.event.player.UseItemCallback;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.entity.npc.villager.Villager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,35 +25,48 @@ public class GrabVillager implements ModInitializer {
 
     @Override
     public void onInitialize() {
-        LOG.info("Le mod Grab Villager est chargé !");
-        atom.grabvillager.config.GrabVillagerConfig.load();
+        LOG.info("Grab Villager loaded!");
+        GrabVillagerConfig.load();
 
-        // 1. CORRECTION NOMENCLATURE : playC2S() devient serverboundPlay()
+        // 1. Register network payloads
         PayloadTypeRegistry.serverboundPlay().register(VillagerDropPayload.PACKET_ID, VillagerDropPayload.PACKET_CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(ConfigSyncPayload.PACKET_ID, ConfigSyncPayload.PACKET_CODEC);
 
-        // 2. Enregistrement du récepteur avec PACKET_ID
+        // 2. Register C2S receiver
         ServerPlayNetworking.registerGlobalReceiver(VillagerDropPayload.PACKET_ID, (payload, context) -> {
             context.server().execute(() -> {
                 GrabVillagerLogic.handleDropOrThrow(context.player(), payload.isThrow(), payload.charge(), payload.multiplier());
             });
         });
 
-        // Nettoyage de la mémoire à la déconnexion d'un joueur
-        net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
+        // Sync server config to joining clients
+        ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
+            if (ServerPlayNetworking.canSend(handler.getPlayer(), ConfigSyncPayload.PACKET_ID)) {
+                ServerPlayNetworking.send(handler.getPlayer(), new ConfigSyncPayload(
+                        GrabVillagerConfig.throwMultiplier,
+                        GrabVillagerConfig.allowTools
+                ));
+            }
+        });
+
+        // Clean up player cooldown map on disconnect
+        ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
             GrabVillagerLogic.onPlayerDisconnect(handler.getPlayer().getUUID());
         });
 
-        // 3. Interagir avec une Entité
+        // 3. Entity interaction
         UseEntityCallback.EVENT.register((player, world, hand, entity, hitResult) -> {
-            // EXCEPTION POUR LES ÉCHANGES / SOINS : On laisse toujours passer l'interaction avec un villageois/trader/zombie villageois
             if (GrabVillagerLogic.isGrabbable(entity)) {
                 if (GrabVillagerLogic.isCarryingVillager(player)) {
+                    if (GrabVillagerLogic.shouldBlockActions(player)) {
+                        return InteractionResult.FAIL;
+                    }
                     return InteractionResult.PASS;
                 }
                 return GrabVillagerLogic.tryGrab(player, entity, hand);
             }
 
-            // Dépose ciblée dans les véhicules (Minecarts, Bateaux, etc.)
+            // Targeted placement into vehicles (Minecarts & Boats)
             if (GrabVillagerLogic.isCarryingVillager(player)) {
                 InteractionResult vehicleResult = GrabVillagerLogic.tryPlaceInVehicle(player, entity, hand);
                 if (vehicleResult != InteractionResult.PASS) {
@@ -59,12 +74,11 @@ public class GrabVillager implements ModInitializer {
                 }
             }
 
-            // Pour les autres entités, on applique le blocage si nécessaire
             if (GrabVillagerLogic.shouldBlockActions(player)) return InteractionResult.FAIL;
             return InteractionResult.PASS;
         });
 
-        // 4. Interagir avec un Item
+        // 4. Item use
         UseItemCallback.EVENT.register((player, world, hand) -> {
             if (GrabVillagerLogic.shouldBlockActions(player)) {
                 return InteractionResult.FAIL;
@@ -72,19 +86,19 @@ public class GrabVillager implements ModInitializer {
             return InteractionResult.PASS;
         });
 
-        // 5. Interagir avec un Bloc
+        // 5. Block use
         UseBlockCallback.EVENT.register((player, world, hand, hitResult) -> {
             if (GrabVillagerLogic.shouldBlockActions(player)) return InteractionResult.FAIL;
             return InteractionResult.PASS;
         });
 
-        // 6. Attaquer un Bloc
+        // 6. Block attack
         AttackBlockCallback.EVENT.register((player, world, hand, pos, direction) -> {
             if (GrabVillagerLogic.shouldBlockActions(player)) return InteractionResult.FAIL;
             return InteractionResult.PASS;
         });
 
-        // 7. Attaquer une Entité
+        // 7. Entity attack
         AttackEntityCallback.EVENT.register((player, world, hand, entity, hitResult) -> {
             if (GrabVillagerLogic.isOwnPassenger(player, entity)) return InteractionResult.FAIL;
             if (GrabVillagerLogic.shouldBlockActions(player)) return InteractionResult.FAIL;

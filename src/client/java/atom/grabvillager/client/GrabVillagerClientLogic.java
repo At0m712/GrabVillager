@@ -8,6 +8,7 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 
@@ -51,6 +52,14 @@ public class GrabVillagerClientLogic {
         GrabVillagerLogic.clientPlayerId = client.player.getUUID();
         GrabVillagerLogic.clientChargeProgress = chargeProgress;
 
+        // Cancel charge cleanly if a screen/GUI is opened or mouse is ungrabbed so we don't accidentally drop or throw
+        if (client.gui.screen() != null || !client.mouseHandler.isMouseGrabbed()) {
+            ticksHeld = 0;
+            chargeProgress = 0.0f;
+            wasDown = false;
+            return;
+        }
+
         boolean isCarrying = GrabVillagerLogic.isCarryingVillager(client.player);
         boolean isDown = isCarrying && GrabVillagerClient.dropKey.isDown();
 
@@ -58,8 +67,8 @@ public class GrabVillagerClientLogic {
             ticksHeld++;
             chargeProgress = Math.min(1.0f, ticksHeld / 20.0f);
 
-            // Prévisualisation de trajectoire en pointillés pendant la charge du lancer
-            if (ticksHeld >= 3 && client.level != null) {
+            // Dotted parabolic trajectory preview every 2 ticks while charging
+            if (ticksHeld >= 3 && ticksHeld % 2 == 1 && client.level != null) {
                 renderTrajectoryPreview(client.player, client.level, chargeProgress);
             }
         } else if (wasDown) {
@@ -91,31 +100,46 @@ public class GrabVillagerClientLogic {
 
         Entity passenger = player.getFirstPassenger();
         double bbHeight = passenger != null ? passenger.getBbHeight() : 1.95;
+        double bbWidth = passenger != null ? passenger.getBbWidth() : 0.6;
+        double halfW = bbWidth * 0.45;
         double spawnY = Math.max(player.getY(), dropPos.y - (bbHeight * 0.5));
         Vec3 simPos = new Vec3(dropPos.x, spawnY, dropPos.z);
 
-        float safeClientMult = Math.max(0.1f, Math.min(3.0f, GrabVillagerConfig.throwMultiplier));
-        float velocity = (0.5f + (charge * 1.2f)) * safeClientMult;
+        // Respect server-capped throw multiplier for accurate preview in multiplayer
+        float multiplier = GrabVillagerConfig.getEffectiveThrowMultiplier();
+        float velocity = (0.5f + (charge * 1.2f)) * multiplier;
         Vec3 simVel = new Vec3(look.x * velocity, (look.y * velocity) + 0.5D, look.z * velocity);
 
         for (int step = 0; step < 30; step++) {
             Vec3 nextPos = simPos.add(simVel);
-            HitResult blockHit = level.clip(new ClipContext(simPos, nextPos, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, player));
-            Vec3 stepEnd = (blockHit.getType() != HitResult.Type.MISS) ? blockHit.getLocation() : nextPos;
+            Vec3 rayStart = simPos.add(0.0, bbHeight * 0.4, 0.0);
+            Vec3 rayEnd = nextPos.add(0.0, bbHeight * 0.4, 0.0);
+            HitResult blockHit = level.clip(new ClipContext(rayStart, rayEnd, ClipContext.Block.COLLIDER, ClipContext.Fluid.ANY, player));
 
-            double dist = simPos.distanceTo(stepEnd);
-            int subSteps = Math.max(1, (int) Math.ceil(dist / 0.7));
-            for (int s = 0; s < subSteps; s++) {
-                double t = (double) s / (double) subSteps;
-                double px = simPos.x + (stepEnd.x - simPos.x) * t;
-                double py = simPos.y + (stepEnd.y - simPos.y) * t + (bbHeight * 0.4);
-                double pz = simPos.z + (stepEnd.z - simPos.z) * t;
-
-                level.addParticle(ParticleTypes.CRIT, px, py, pz, 0, 0, 0);
+            boolean boxBlocked = false;
+            if (blockHit.getType() == HitResult.Type.MISS && step >= 1 && passenger != null) {
+                AABB checkBox = new AABB(
+                        nextPos.x - halfW, nextPos.y + 0.05, nextPos.z - halfW,
+                        nextPos.x + halfW, nextPos.y + bbHeight * 0.95, nextPos.z + halfW
+                );
+                boxBlocked = !level.noCollision(passenger, checkBox);
             }
 
-            if (blockHit.getType() != HitResult.Type.MISS) {
-                Vec3 impact = blockHit.getLocation();
+            Vec3 stepEnd = (blockHit.getType() != HitResult.Type.MISS) ? blockHit.getLocation() : rayEnd;
+
+            double dist = rayStart.distanceTo(stepEnd);
+            int subSteps = Math.max(1, (int) Math.ceil(dist / 0.75));
+            for (int s = 0; s < subSteps; s++) {
+                double t = (double) s / (double) subSteps;
+                double px = rayStart.x + (stepEnd.x - rayStart.x) * t;
+                double py = rayStart.y + (stepEnd.y - rayStart.y) * t;
+                double pz = rayStart.z + (stepEnd.z - rayStart.z) * t;
+
+                level.addParticle(ParticleTypes.ELECTRIC_SPARK, px, py, pz, 0, 0, 0);
+            }
+
+            if (blockHit.getType() != HitResult.Type.MISS || boxBlocked) {
+                Vec3 impact = (blockHit.getType() != HitResult.Type.MISS) ? blockHit.getLocation() : nextPos.add(0.0, 0.1, 0.0);
                 level.addParticle(ParticleTypes.HAPPY_VILLAGER, impact.x, impact.y + 0.1, impact.z, 0, 0.02, 0);
                 level.addParticle(ParticleTypes.END_ROD, impact.x, impact.y + 0.05, impact.z, 0, 0, 0);
                 break;
