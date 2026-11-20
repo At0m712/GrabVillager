@@ -3,6 +3,7 @@ package atom.grabvillager;
 import atom.grabvillager.client.GrabVillagerClient;
 import atom.grabvillager.config.GrabVillagerConfig;
 import atom.grabvillager.logic.GrabVillagerLogic;
+import atom.grabvillager.network.ConfigSyncPayload;
 import atom.grabvillager.network.VillagerDropPayload;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionResult;
@@ -14,7 +15,9 @@ import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.player.AttackEntityEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
+import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 import org.slf4j.Logger;
@@ -28,7 +31,7 @@ public class GrabVillager {
     public static final Logger LOG = LoggerFactory.getLogger(MOD_NAME);
 
     public GrabVillager(IEventBus modEventBus) {
-        LOG.info("Le mod Grab Villager (NeoForge) est chargé !");
+        LOG.info("Grab Villager (NeoForge) loaded!");
         GrabVillagerConfig.load();
 
         modEventBus.addListener(this::registerPayloadHandlers);
@@ -41,7 +44,7 @@ public class GrabVillager {
     }
 
     private void registerPayloadHandlers(RegisterPayloadHandlersEvent event) {
-        PayloadRegistrar registrar = event.registrar(MOD_ID);
+        PayloadRegistrar registrar = event.registrar(MOD_ID).optional();
         registrar.playToServer(
                 VillagerDropPayload.PACKET_ID,
                 VillagerDropPayload.PACKET_CODEC,
@@ -51,6 +54,30 @@ public class GrabVillager {
                     }
                 })
         );
+        registrar.playToClient(
+                ConfigSyncPayload.PACKET_ID,
+                ConfigSyncPayload.PACKET_CODEC,
+                (payload, context) -> context.enqueueWork(() -> {
+                    if (FMLEnvironment.getDist() == Dist.CLIENT) {
+                        GrabVillagerClient.handleConfigSync(payload.throwMultiplier(), payload.allowTools());
+                    }
+                })
+        );
+    }
+
+    @SubscribeEvent
+    public void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
+        if (event.getEntity() instanceof ServerPlayer serverPlayer && serverPlayer.connection.hasChannel(ConfigSyncPayload.PACKET_ID)) {
+            PacketDistributor.sendToPlayer(serverPlayer, new ConfigSyncPayload(
+                    GrabVillagerConfig.throwMultiplier,
+                    GrabVillagerConfig.allowTools
+            ));
+        }
+    }
+
+    @SubscribeEvent
+    public void onPlayerLoggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
+        GrabVillagerLogic.onPlayerDisconnect(event.getEntity().getUUID());
     }
 
     @SubscribeEvent
@@ -58,6 +85,10 @@ public class GrabVillager {
         Player player = event.getEntity();
         if (GrabVillagerLogic.isGrabbable(event.getTarget())) {
             if (GrabVillagerLogic.isCarryingVillager(player)) {
+                if (GrabVillagerLogic.shouldBlockActions(player)) {
+                    event.setCancellationResult(InteractionResult.FAIL);
+                    event.setCanceled(true);
+                }
                 return;
             }
             InteractionResult result = GrabVillagerLogic.tryGrab(player, event.getTarget(), event.getHand());
@@ -66,6 +97,16 @@ public class GrabVillager {
                 event.setCanceled(true);
             }
             return;
+        }
+
+        // Targeted placement into vehicles (Minecarts & Boats)
+        if (GrabVillagerLogic.isCarryingVillager(player)) {
+            InteractionResult vehicleResult = GrabVillagerLogic.tryPlaceInVehicle(player, event.getTarget(), event.getHand());
+            if (vehicleResult != InteractionResult.PASS) {
+                event.setCancellationResult(vehicleResult);
+                event.setCanceled(true);
+                return;
+            }
         }
 
         if (GrabVillagerLogic.shouldBlockActions(player)) {

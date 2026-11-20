@@ -9,6 +9,7 @@ import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.RegisterClientCommandsEvent;
 import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
@@ -32,6 +33,18 @@ public class GrabVillagerClient {
 
         NeoForge.EVENT_BUS.addListener(GrabVillagerClient::onClientTick);
         NeoForge.EVENT_BUS.addListener(GrabVillagerClient::onRegisterCommands);
+        NeoForge.EVENT_BUS.addListener(GrabVillagerClient::onClientLogout);
+    }
+
+    public static void handleConfigSync(float throwMultiplier, boolean allowTools) {
+        Minecraft mc = Minecraft.getInstance();
+        if (!mc.isLocalServer()) {
+            GrabVillagerConfig.applyServerSync(throwMultiplier, allowTools);
+        }
+    }
+
+    public static void onClientLogout(ClientPlayerNetworkEvent.LoggingOut event) {
+        GrabVillagerConfig.clearServerSync();
     }
 
     public static void registerKeys(RegisterKeyMappingsEvent event) {
