@@ -1,8 +1,10 @@
 package atom.grabvillager.client.mixin;
 
 import atom.grabvillager.client.GrabVillagerClientLogic;
+import atom.grabvillager.client.IVillagerFlightState;
 import atom.grabvillager.client.IVillagerRotationState;
 import atom.grabvillager.config.GrabVillagerConfig;
+import atom.grabvillager.logic.GrabVillagerLogic;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;
@@ -10,7 +12,6 @@ import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.npc.villager.Villager;
 import net.minecraft.world.entity.player.Player;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -20,11 +21,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(LivingEntityRenderer.class)
 public class VillagerRotationMixin {
 
-    // ÉTAPE 1 : On capture les données de l'entité juste avant le rendu et on les stocke dans notre state
     @Inject(method = "extractRenderState", at = @At("TAIL"))
     private void grabvillager$onExtractRenderState(LivingEntity entity, LivingEntityRenderState state, float partialTick, CallbackInfo ci) {
+        boolean grabbable = GrabVillagerLogic.isGrabbable(entity);
+
         if (state instanceof IVillagerRotationState customState) {
-            if (atom.grabvillager.logic.GrabVillagerLogic.isGrabbable(entity) && entity.getVehicle() instanceof Player player) {
+            if (grabbable && entity.getVehicle() instanceof Player player) {
                 customState.grabvillager$setRidingPlayer(true);
                 customState.grabvillager$setRidingLocalPlayer(player == Minecraft.getInstance().player);
                 customState.grabvillager$setPlayerSwimAmount(player.getSwimAmount(partialTick));
@@ -33,17 +35,19 @@ public class VillagerRotationMixin {
                 customState.grabvillager$setRidingPlayer(false);
             }
         }
+
+        if (state instanceof IVillagerFlightState flightState) {
+            boolean inAir = grabbable && !entity.onGround() && !entity.isInWater() && entity.getVehicle() == null && entity.getDeltaMovement().lengthSqr() > 0.03;
+            flightState.grabvillager$setFlyingInAir(inAir);
+        }
     }
 
-    // ÉTAPE 2 : On applique les rotations en lisant le state (puisqu'on n'a plus accès à l'entité)
     @Inject(method = "setupRotations", at = @At("TAIL"))
     private void grabvillager$onSetupRotations(LivingEntityRenderState state, PoseStack poseStack, float bodyRot, float scale, CallbackInfo ci) {
         if (state instanceof IVillagerRotationState customState && customState.grabvillager$isRidingPlayer()) {
 
             boolean isLocal = customState.grabvillager$isRidingLocalPlayer();
-
-            // LA CORRECTION EST ICI : Ajout du "!" devant GrabVillagerConfig.allowTools
-            float progress = (!GrabVillagerConfig.allowTools) ? 1.0f : (isLocal ? GrabVillagerClientLogic.getChargeProgress() : 0.0f);
+            float progress = (!GrabVillagerConfig.getEffectiveAllowTools()) ? 1.0f : (isLocal ? GrabVillagerClientLogic.getChargeProgress() : 0.0f);
 
             float swimAmount = customState.grabvillager$getPlayerSwimAmount();
             float sneakAngle = customState.grabvillager$isPlayerCrouching() ? 28.65f : 0.0f;

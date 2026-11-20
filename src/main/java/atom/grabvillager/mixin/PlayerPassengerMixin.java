@@ -1,7 +1,9 @@
 package atom.grabvillager.mixin;
 
-import atom.grabvillager.logic.GrabVillagerLogic;
 import atom.grabvillager.config.GrabVillagerConfig;
+import atom.grabvillager.logic.GrabVillagerLogic;
+import net.minecraft.network.protocol.game.ClientboundSetPassengersPacket;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -17,8 +19,20 @@ public abstract class PlayerPassengerMixin {
     private void grabvillager$onPositionRider(Entity passenger, Entity.MoveFunction callback, CallbackInfo ci) {
         if ((Object) this instanceof Player player && GrabVillagerLogic.isGrabbable(passenger)) {
 
+            // Auto-dismount if the player sleeps, flies with elytra, or enters a vehicle
+            if (player.isSleeping() || player.isFallFlying() || player.getVehicle() != null) {
+                passenger.stopRiding();
+                passenger.setPos(player.getX(), player.getY(), player.getZ());
+                if (!player.level().isClientSide() && player instanceof ServerPlayer serverPlayer) {
+                    ClientboundSetPassengersPacket packet = new ClientboundSetPassengersPacket(player);
+                    serverPlayer.level().getChunkSource().sendToTrackingPlayersAndSelf(player, packet);
+                }
+                ci.cancel();
+                return;
+            }
+
             boolean isLocal = player.level().isClientSide() && GrabVillagerLogic.clientPlayerId != null && player.getUUID().equals(GrabVillagerLogic.clientPlayerId);
-            float progress = (!GrabVillagerConfig.allowTools) ? 1.0f : (isLocal ? GrabVillagerLogic.clientChargeProgress : 0.0f);
+            float progress = (!GrabVillagerConfig.getEffectiveAllowTools()) ? 1.0f : (isLocal ? GrabVillagerLogic.clientChargeProgress : 0.0f);
 
             if (passenger instanceof LivingEntity livingPassenger) {
                 livingPassenger.setYBodyRot(player.yBodyRot);
@@ -44,11 +58,8 @@ public abstract class PlayerPassengerMixin {
             double offsetZ = 0.0;
 
             if (passenger instanceof LivingEntity living && living.isBaby()) {
-
                 double backwardDistance = 0.4 * progress;
-
                 float bodyYawRad = player.yBodyRot * ((float) Math.PI / 180.0F);
-
                 offsetX = Math.sin(bodyYawRad) * backwardDistance;
                 offsetZ = -Math.cos(bodyYawRad) * backwardDistance;
             }

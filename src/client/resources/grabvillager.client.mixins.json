@@ -7,11 +7,10 @@
 		"AvatarRendererMixin",
 		"HideCarriedVillagerMixin",
 		"HideHandMixin",
+		"HumanoidFlightModelMixin",
 		"LivingEntityRenderStateMixin",
 		"PlayerModelMixin",
 		"VillagerModelMixin",
-		"VillagerRenderStateMixin",
-		"VillagerRendererMixin",
 		"VillagerRotationMixin"
 	],
 	"injectors": {

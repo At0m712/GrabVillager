@@ -31,5 +31,11 @@
   "text.grabvillager.config.color.vanilla": "Vanilla",
   "text.grabvillager.config.color.ocean": "Ocean",
   "text.grabvillager.config.color.lava": "Lava",
-  "text.grabvillager.config.color.ender": "Ender"
+  "text.grabvillager.config.color.ender": "Ender",
+
+  "text.grabvillager.hud.baby_villager": "Baby Villager",
+  "text.grabvillager.hud.baby_zombie_villager": "Baby Zombie Villager",
+  "text.grabvillager.hud.zombie_villager": "Zombie Villager",
+  "text.grabvillager.hud.unemployed": "Unemployed",
+  "text.grabvillager.hud.baby_prefix": "Baby"
 }
