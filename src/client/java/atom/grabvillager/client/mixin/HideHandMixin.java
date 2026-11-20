@@ -1,12 +1,12 @@
 package atom.grabvillager.client.mixin;
 
 import atom.grabvillager.config.GrabVillagerConfig;
+import atom.grabvillager.logic.GrabVillagerLogic;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.ItemInHandRenderer;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.entity.npc.villager.Villager;
 import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -18,16 +18,11 @@ public class HideHandMixin {
 
     @Inject(method = {"submitArmWithItem", "renderArmWithItem"}, at = @At("HEAD"), cancellable = true, require = 0)
     private void grabvillager$hideHandWhenCarrying(AbstractClientPlayer player, float f1, float f2, InteractionHand hand, float f3, ItemStack itemStack, float f4, PoseStack poseStack, SubmitNodeCollector buffer, int packedLight, CallbackInfo ci) {
-
-        // 1. SÉCURITÉ : Si la configuration AUTORISE l'usage des outils, on ne cache rien du tout.
-        if (GrabVillagerConfig.allowTools) {
+        if (GrabVillagerConfig.getEffectiveAllowTools()) {
             return;
         }
 
-        // 2. Si les outils sont INTERDITS, on vérifie si on porte une entité grabbable
-        if (player.getPassengers().stream().anyMatch(atom.grabvillager.logic.GrabVillagerLogic::isGrabbable)) {
-
-            // On annule l'affichage de la main et de l'objet
+        if (player.getPassengers().stream().anyMatch(GrabVillagerLogic::isGrabbable)) {
             ci.cancel();
         }
     }

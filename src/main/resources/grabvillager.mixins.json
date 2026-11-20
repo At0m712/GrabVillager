@@ -8,7 +8,8 @@
     "PlayerPassengerMixin",
     "GhostVillagerMixin",
     "VillagerFlightMixin",
-    "ZombieSunMixin"
+    "ZombieSunMixin",
+    "CarriedMobTargetMixin"
   ],
 
   "injectors": {

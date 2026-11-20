@@ -23,14 +23,14 @@ public class GrabVillagerConfigScreen extends Screen {
         int y = 40;
         int spacing = 24;
 
-        // 1. Slider pour la Distance (Max 3.0)
-        ConfigSlider throwSlider = new ConfigSlider(midX - 75, y, 150, 20, "text.grabvillager.config.throwMultiplier", GrabVillagerConfig.throwMultiplier, 0.1, 3.0, false, val -> GrabVillagerConfig.throwMultiplier = val.floatValue());
+        // 1. Throw Distance Slider (Max 3.0)
+        ConfigSlider throwSlider = new ConfigSlider(midX - 75, y, 150, 20, "text.grabvillager.config.throwMultiplier", GrabVillagerConfig.throwMultiplier, 0.1, 3.0, false, val -> GrabVillagerConfig.throwMultiplier = Math.round(val * 10.0) / 10.0f);
         this.addRenderableWidget(Button.builder(Component.literal("-"), b -> throwSlider.setDirectValue(GrabVillagerConfig.throwMultiplier - 0.1)).bounds(midX - 100, y, 20, 20).build());
         this.addRenderableWidget(throwSlider);
         this.addRenderableWidget(Button.builder(Component.literal("+"), b -> throwSlider.setDirectValue(GrabVillagerConfig.throwMultiplier + 0.1)).bounds(midX + 80, y, 20, 20).build());
         y += spacing;
 
-        // 2. Boutons d'options (Outils, Couleur, Orientation)
+        // 2. Toggle buttons (Tools, Color, Orientation)
         btnTools = this.addRenderableWidget(Button.builder(Component.empty(), b -> { GrabVillagerConfig.allowTools = !GrabVillagerConfig.allowTools; updateLabels(); }).bounds(midX - 100, y, 200, 20).build());
         y += spacing;
         btnColor = this.addRenderableWidget(Button.builder(Component.empty(), b -> { GrabVillagerConfig.barColorIndex = (GrabVillagerConfig.barColorIndex + 1) % 4; updateLabels(); }).bounds(midX - 100, y, 200, 20).build());
@@ -38,28 +38,28 @@ public class GrabVillagerConfigScreen extends Screen {
         btnOrient = this.addRenderableWidget(Button.builder(Component.empty(), b -> { GrabVillagerConfig.barVertical = !GrabVillagerConfig.barVertical; updateLabels(); }).bounds(midX - 100, y, 200, 20).build());
         y += spacing;
 
-        // 3. Slider pour la Taille (Max 1.0)
-        ConfigSlider sizeSlider = new ConfigSlider(midX - 75, y, 150, 20, "text.grabvillager.config.barSize", GrabVillagerConfig.barSize, 0.1, 1.0, false, val -> GrabVillagerConfig.barSize = val.floatValue());
+        // 3. Bar Size Slider (Max 1.0)
+        ConfigSlider sizeSlider = new ConfigSlider(midX - 75, y, 150, 20, "text.grabvillager.config.barSize", GrabVillagerConfig.barSize, 0.1, 1.0, false, val -> GrabVillagerConfig.barSize = Math.round(val * 10.0) / 10.0f);
         this.addRenderableWidget(Button.builder(Component.literal("-"), b -> sizeSlider.setDirectValue(GrabVillagerConfig.barSize - 0.1)).bounds(midX - 100, y, 20, 20).build());
         this.addRenderableWidget(sizeSlider);
         this.addRenderableWidget(Button.builder(Component.literal("+"), b -> sizeSlider.setDirectValue(GrabVillagerConfig.barSize + 0.1)).bounds(midX + 80, y, 20, 20).build());
         y += spacing;
 
-        // 4. Slider pour la Position X (Offset)
-        ConfigSlider xSlider = new ConfigSlider(midX - 75, y, 150, 20, "text.grabvillager.config.barOffsetX", GrabVillagerConfig.barOffsetX, -1000, 1000, true, val -> GrabVillagerConfig.barOffsetX = val.intValue());
+        // 4. Bar Offset X Slider
+        ConfigSlider xSlider = new ConfigSlider(midX - 75, y, 150, 20, "text.grabvillager.config.barOffsetX", GrabVillagerConfig.barOffsetX, -1000, 1000, true, val -> GrabVillagerConfig.barOffsetX = (int) Math.round(val));
         this.addRenderableWidget(Button.builder(Component.literal("<"), b -> xSlider.setDirectValue(GrabVillagerConfig.barOffsetX - 10)).bounds(midX - 100, y, 20, 20).build());
         this.addRenderableWidget(xSlider);
         this.addRenderableWidget(Button.builder(Component.literal(">"), b -> xSlider.setDirectValue(GrabVillagerConfig.barOffsetX + 10)).bounds(midX + 80, y, 20, 20).build());
         y += spacing;
 
-        // 5. Slider pour la Position Y (Offset)
-        ConfigSlider ySlider = new ConfigSlider(midX - 75, y, 150, 20, "text.grabvillager.config.barOffsetY", GrabVillagerConfig.barOffsetY, -1000, 1000, true, val -> GrabVillagerConfig.barOffsetY = val.intValue());
+        // 5. Bar Offset Y Slider
+        ConfigSlider ySlider = new ConfigSlider(midX - 75, y, 150, 20, "text.grabvillager.config.barOffsetY", GrabVillagerConfig.barOffsetY, -1000, 1000, true, val -> GrabVillagerConfig.barOffsetY = (int) Math.round(val));
         this.addRenderableWidget(Button.builder(Component.literal("^"), b -> ySlider.setDirectValue(GrabVillagerConfig.barOffsetY - 10)).bounds(midX - 100, y, 20, 20).build());
         this.addRenderableWidget(ySlider);
         this.addRenderableWidget(Button.builder(Component.literal("v"), b -> ySlider.setDirectValue(GrabVillagerConfig.barOffsetY + 10)).bounds(midX + 80, y, 20, 20).build());
         y += spacing + 10;
 
-        // Bouton de Sauvegarde
+        // Save button
         this.addRenderableWidget(Button.builder(Component.translatable("text.grabvillager.config.save"), b -> {
             GrabVillagerConfig.save();
             this.minecraft.setScreenAndShow(null);
@@ -90,7 +90,6 @@ public class GrabVillagerConfigScreen extends Screen {
         guiGraphics.centeredText(this.font, this.title, this.width / 2, 15, 0xFFFFFF);
     }
 
-
     private static class ConfigSlider extends AbstractSliderButton {
         private final String translationKey;
         private final double min, max;
@@ -110,7 +109,7 @@ public class GrabVillagerConfigScreen extends Screen {
         @Override
         protected void updateMessage() {
             double current = min + (this.value * (max - min));
-            String formattedValue = isInt ? String.valueOf((int) Math.round(current)) : String.format(Locale.US, "x%.1f", current);
+            String formattedValue = isInt ? String.valueOf((int) Math.round(current)) : String.format(Locale.US, "x%.1f", Math.round(current * 10.0) / 10.0);
             this.setMessage(Component.translatable(this.translationKey).append(" : ").append(Component.literal(formattedValue)));
         }
 
